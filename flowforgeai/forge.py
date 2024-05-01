@@ -1,5 +1,6 @@
 import inspect
 from fastapi import FastAPI, Path, Query
+from fastapi.responses import HTMLResponse
 from typing import Callable, Dict, Any
 
 
@@ -37,9 +38,14 @@ class FlowForge:
     def serve(self) -> FastAPI:
         app = FastAPI()
 
+        # create index endpoint
+        @app.get("/")
+        async def index():
+            return HTMLResponse("<h1>Welcome to the FlowForge API</h1>")
+
         for step_name, func in self.steps.items():
             signature = inspect.signature(func)
-            path = f"/{step_name}"
+            path = f"/api/{step_name}"
             params = []
 
             for name, param in signature.parameters.items():
