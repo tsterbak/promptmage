@@ -1,7 +1,10 @@
 import inspect
+from functools import partial
 from fastapi import FastAPI, Path, Query
 from fastapi.responses import HTMLResponse
 from typing import Callable, Dict, Any
+
+from .prompt import Prompt
 
 
 class FlowForge:
@@ -10,32 +13,42 @@ class FlowForge:
         self.steps: Dict = {}
         print(f"Initialized FlowForge with name: {name}")
 
-    def step(self, name: str):
-        # This is the outermost function taking the 'name' argument.
+    def step(self, name: str, prompt_id: str = None):
+        """Decorator to add a step to the FlowForge instance.
+
+        Args:
+            name (str): The name of the step.
+            prompt_id (str, optional): The ID of the prompt to use for this step. Defaults to None.
+        """
+        # Load the prompt if provided
+        prompt = Prompt(prompt_id) if prompt_id else None
+
         def decorator(func):
             # This is the actual decorator.
             def wrapper(*args, **kwargs):
-                # This is the wrapper function that will call the actual function.
+                if prompt:
+                    kwargs["prompt"] = prompt
+                    return func(*args, **kwargs)
                 return func(*args, **kwargs)
 
-            # Here we register the original function, not the wrapper, to maintain access to the original
-            # function's signature which is important for FastAPI's routing and dependency injection.
-            self.steps[name] = func
-
-            # We return the wrapper here, but you might choose to return `func` if you don't need to modify behavior.
+            if prompt:
+                self.steps[name] = partial(func, prompt=prompt)
+            else:
+                self.steps[name] = func
             return wrapper
 
         return decorator
 
     def create_endpoint_function(self, func, params):
         # Define the endpoint function using dynamic parameters
-        async def endpoint(**kwargs):
+        async def endpoint(*args, **kwargs):
             # Directly pass the keyword arguments to the function
-            return func(**kwargs)
+            return func(*args, **kwargs)
 
         return endpoint
 
     def serve(self) -> FastAPI:
+        """Create a FastAPI application to serve the FlowForge instance."""
         app = FastAPI()
 
         # create index endpoint
@@ -43,12 +56,16 @@ class FlowForge:
         async def index():
             return HTMLResponse("<h1>Welcome to the FlowForge API</h1>")
 
+        # create the endpoints for each step
         for step_name, func in self.steps.items():
             signature = inspect.signature(func)
             path = f"/api/{step_name}"
             params = []
 
             for name, param in signature.parameters.items():
+                # ignore prompt parameter
+                if name == "prompt":
+                    continue
                 if param.default is inspect.Parameter.empty:
                     # Assume required parameters are path parameters
                     new_param = inspect.Parameter(
