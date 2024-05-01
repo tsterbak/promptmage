@@ -20,7 +20,7 @@ pip install flowforgeai
 To use flowforge, run the following command:
 
 ```bash
-flowforge run
+flowforge serve <path-to-flow>
 ```
 
 ## Contributing

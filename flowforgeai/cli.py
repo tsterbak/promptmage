@@ -1,30 +1,26 @@
-"""This module contains the command line interface for the flowforgeai package."""
+"""This module contains the command line interface for the flowforge package."""
 
-import click
-
-
-def help():
-    """Show the help message for the CLI."""
-    print("Usage: flowforge <entrypoint>")
-    print()
-    print("Available entrypoints:")
-    print("  help: Show this help message")
-    print("  run: Run the flowforgeai package")
+import uvicorn
+from importlib import import_module
+from pathlib import Path
+import sys
 
 
-def run():
-    """Run the flowforgeai package."""
-    print("Running the flowforge package")
+def serve(file_path: str):
+    # Dynamically import the application module
+    sys.path.append(
+        str(Path(file_path).parent.absolute())
+    )  # Add the directory of the file to PYTHONPATH
+    module_name = Path(file_path).stem
+    spec = import_module(module_name)
 
+    # Assuming there is a FlowForge instance named `flow` in the module
+    flow = getattr(spec, "flow")
+    app = flow.serve()
 
-@click.command()
-@click.argument("entrypoint", type=str, default="help")
-def main(entrypoint: str):
-    if entrypoint == "help":
-        help()
-    elif entrypoint == "run":
-        run()
+    # Run the FastAPI app
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":
-    main()
+    serve(sys.argv[1])
