@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "flowforgeai"
+version = "0.1.0"
+description = "\"FlowForge\" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution."
+authors = ["Tobias Sterbak <github@tobiassterbak.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+loguru = "^0.7.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+ruff = "^0.4.2"
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
