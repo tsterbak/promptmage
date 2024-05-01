@@ -24,4 +24,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-flowforge = "flowforgeai.cli:main"
+flowforge = "flowforgeai.cli:serve"
