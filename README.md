@@ -4,7 +4,7 @@
     <img src="images/flowforge-logo.png" alt="FlowForge-Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">FlowForge</h3>
+  <h1 align="center">FlowForge</h1>
 
   <p align="center">
     simplifies the process of creating and managing LLM workflows as a self-hosted solution.
