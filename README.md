@@ -1,7 +1,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/tsterbak/flowforge">
-    <img src="images/flowforge-logo.png" alt="FlowForge-Logo" width="80" height="80">
+    <img src="images/flowforge-logo.png" alt="FlowForge-Logo" width="120" height="120">
   </a>
 
   <h1 align="center">FlowForge</h1>
