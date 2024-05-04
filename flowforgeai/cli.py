@@ -3,6 +3,7 @@
 import os
 import sys
 import click
+import asyncio
 import uvicorn
 import multiprocessing
 from importlib import import_module
@@ -15,13 +16,19 @@ from flowforgeai import FlowForge
 
 def run_fastapi(app, host, port):
     # Run the FastAPI app
-    uvicorn.run(app, host=host, port=port)
+    try:
+        uvicorn.run(app, host=host, port=port)
+    except KeyboardInterrupt:
+        pass
+    except asyncio.CancelledError:
+        pass
 
 
 def run_streamlit(port=8501):
     os.environ["STREAMLIT_SERVER_PORT"] = str(port)
     sys.argv = ["streamlit", "run", "flowforgeai/frontend.py"]
     sys.exit(stcli.main())
+    return
 
 
 @click.command()
@@ -65,7 +72,11 @@ def serve(file_path, host, port):
     streamlit_process.start()
 
     # Wait for both processes to finish
-    fastapi_process.join()
+    try:
+        fastapi_process.join()
+    except KeyboardInterrupt:
+        fastapi_process.terminate()
+        fastapi_process.join()
     streamlit_process.join()
 
 
