@@ -1,11 +1,12 @@
 """This module contains the command line interface for the FlowForge package."""
 
+import os
+import sys
 import click
 import uvicorn
 import multiprocessing
 from importlib import import_module
 from pathlib import Path
-import sys
 
 from streamlit.web import cli as stcli
 
@@ -17,9 +18,9 @@ def run_fastapi(app, host, port):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_streamlit():
-    # Run the Streamlit app
-    sys.argv = ["streamlit", "run", "flowforgeai/app.py"]
+def run_streamlit(port=8501):
+    os.environ["STREAMLIT_SERVER_PORT"] = str(port)
+    sys.argv = ["streamlit", "run", "flowforgeai/frontend.py"]
     sys.exit(stcli.main())
 
 
