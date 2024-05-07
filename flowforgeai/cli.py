@@ -12,6 +12,7 @@ from pathlib import Path
 from streamlit.web import cli as stcli
 
 from flowforgeai import FlowForge
+from flowforgeai.frontend import get_dynamic_streamlit_frontend
 
 
 def run_fastapi(app, host, port):
@@ -24,11 +25,15 @@ def run_fastapi(app, host, port):
         pass
 
 
-def run_streamlit(port=8501):
+def run_streamlit(file_path: str, port: int = 8501):
     os.environ["STREAMLIT_SERVER_PORT"] = str(port)
-    sys.argv = ["streamlit", "run", "flowforgeai/frontend.py"]
-    sys.exit(stcli.main())
-    return
+    sys.argv = ["streamlit", "run", file_path]
+    try:
+        # Run the Streamlit app
+        sys.exit(stcli.main())
+    finally:
+        # Clean up the Streamlit app file
+        os.remove(file_path)
 
 
 @click.command()
@@ -58,14 +63,21 @@ def serve(file_path, host, port):
     if not flow_instance:
         raise ValueError("No FlowForge instance found in the module.")
 
-    app = flow_instance.serve()
+    # create the FastAPI app
+    app = flow_instance.serve_api()
+
+    # create the Streamlit app
+    streamlit_app = get_dynamic_streamlit_frontend(flow_instance)
+    streamlit_app_path = flow_instance.serve_frontend(streamlit_app)
 
     # Run the FastAPI app
     fastapi_process = multiprocessing.Process(
         target=run_fastapi, args=(app, host, port)
     )
     # Run the Streamlit app
-    streamlit_process = multiprocessing.Process(target=run_streamlit)
+    streamlit_process = multiprocessing.Process(
+        target=run_streamlit, args=(streamlit_app_path, 8501)
+    )
 
     # Start both processes
     fastapi_process.start()
