@@ -5,6 +5,7 @@ description = "\"FlowForge\" is designed to offer an intuitive interface that si
 authors = ["Tobias Sterbak <github@tobiassterbak.com>"]
 license = "MIT"
 readme = "README.md"
+include = ["flowforgeai/static"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -12,6 +13,7 @@ loguru = "^0.7.2"
 click = "^8.1.7"
 fastapi = "^0.110.3"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
+setuptools = "^69.5.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

@@ -1,5 +1,7 @@
 import inspect
+import pkg_resources
 from functools import partial
+from pathlib import Path
 from typing import Dict
 
 # API imports
@@ -115,14 +117,15 @@ class FlowForge:
             app.add_api_route(path, endpoint_func, methods=["GET"])
             step_list.append({"name": step_name, "path": path})
 
-        # add a route to list all aviailable steps with their names and input variables
+        # add a route to list all available steps with their names and input variables
         @app.get("/api/steps")
         async def list_steps():
             return step_list
 
+        static_files_path = pkg_resources.resource_filename("flowforgeai", "static/")
         app.mount(
             "/",
-            StaticFiles(directory="flowforgeai/static/", html=True),
+            StaticFiles(directory=static_files_path, html=True),
             name="static",
         )
         return app
