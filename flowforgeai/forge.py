@@ -1,12 +1,12 @@
 import inspect
-import tempfile
-import textwrap
 from functools import partial
-from typing import Callable, Dict, Any
+from typing import Dict
 
 # API imports
 from fastapi import FastAPI, Path, Query
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # Local imports
 from .prompt import Prompt
@@ -44,6 +44,9 @@ class FlowForge:
 
         return decorator
 
+    def __repr__(self) -> str:
+        return f"FlowForge(name={self.name}, steps={list(self.steps.keys())})"
+
     def create_endpoint_function(self, func, params):
         # Define the endpoint function using dynamic parameters
         async def endpoint(*args, **kwargs):
@@ -52,16 +55,25 @@ class FlowForge:
 
         return endpoint
 
-    def serve_api(self) -> FastAPI:
+    def get_api(self) -> FastAPI:
         """Create a FastAPI application to serve the FlowForge instance."""
         app = FastAPI()
 
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
         # create index endpoint
-        @app.get("/")
-        async def index():
-            return HTMLResponse("<h1>Welcome to the FlowForge API</h1>")
+        # @app.get("/")
+        # async def index():
+        #    return HTMLResponse("<h1>Welcome to the FlowForge API</h1>")
 
         # create the endpoints for each step
+        step_list = []
         for step_name, func in self.steps.items():
             signature = inspect.signature(func)
             path = f"/api/{step_name}"
@@ -101,24 +113,16 @@ class FlowForge:
 
             # Add the route to FastAPI
             app.add_api_route(path, endpoint_func, methods=["GET"])
+            step_list.append({"name": step_name, "path": path})
 
+        # add a route to list all aviailable steps with their names and input variables
+        @app.get("/api/steps")
+        async def list_steps():
+            return step_list
+
+        app.mount(
+            "/",
+            StaticFiles(directory="flowforgeai/static/", html=True),
+            name="static",
+        )
         return app
-
-    def serve_frontend(self, app_function: Callable) -> str:
-        # Extract the function source code using inspect
-        app_function_code = inspect.getsource(app_function)
-        app_function_code = textwrap.dedent(app_function_code)
-
-        # Create the temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as tmp_file:
-            # Write the function source code into the temp file
-            tmp_file.write("import streamlit as st\n".encode())
-            tmp_file.write(app_function_code.encode())
-
-            # Write the call to the function within the main block
-            tmp_file.write(
-                f"\n\nif __name__ == '__main__':\n    {app_function.__name__}()\n".encode()
-            )
-            tmp_file_name = tmp_file.name
-
-        return tmp_file_name

@@ -40,6 +40,11 @@ flowforge serve <path-to-flow>
 
 Coming soon.
 
+
+## Development
+
+To develop flowforge, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
+
 ## Contributing
 
 To contribute to flowforge, check out the [CONTRIBUTING.md](CONTRIBUTING.md) file.
