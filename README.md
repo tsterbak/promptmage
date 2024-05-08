@@ -53,4 +53,10 @@ To contribute to flowforge, check out the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-## Acknowledgements
+## ❤️ Acknowledgements
+
+This project was supported by
+
+<a href="https://www.media-lab.de/en/programs/media-tech-lab">
+    <img src="images/mtl-powered-by.png" width="240" title="Media Tech Lab powered by logo">
+</a>
