@@ -47,11 +47,21 @@ To develop flowforge, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
 
 ## Contributing
 
-To contribute to flowforge, check out the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+Contributing
+
+We welcome contributions from the community! If you're interested in improving FlowForge, you can contribute in the following ways:
+
+* **Reporting Bugs**: Submit an issue in our repository, providing a detailed description of the problem and steps to reproduce it.
+* **Feature Requests**: Have ideas on how to make FlowForge better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
+* **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
+
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## Contact
+For any inquiries or further information, feel free to reach out at [flowforge@tobiassterbak.com](mailto:flowforge@tobiassterbak.com).
 
 ## ❤️ Acknowledgements
 
