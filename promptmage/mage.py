@@ -14,14 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from .prompt import Prompt
 
 
-class FlowForge:
+class PromptMage:
     def __init__(self, name: str):
         self.name: str = name
         self.steps: Dict = {}
-        print(f"Initialized FlowForge with name: {name}")
+        print(f"Initialized PromptMage with name: {name}")
 
     def step(self, name: str, prompt_id: str = None):
-        """Decorator to add a step to the FlowForge instance.
+        """Decorator to add a step to the PromptMage instance.
 
         Args:
             name (str): The name of the step.
@@ -47,7 +47,7 @@ class FlowForge:
         return decorator
 
     def __repr__(self) -> str:
-        return f"FlowForge(name={self.name}, steps={list(self.steps.keys())})"
+        return f"PromptMage(name={self.name}, steps={list(self.steps.keys())})"
 
     def create_endpoint_function(self, func, params):
         # Define the endpoint function using dynamic parameters
@@ -58,7 +58,7 @@ class FlowForge:
         return endpoint
 
     def get_api(self) -> FastAPI:
-        """Create a FastAPI application to serve the FlowForge instance."""
+        """Create a FastAPI application to serve the PromptMage instance."""
         app = FastAPI()
 
         app.add_middleware(
@@ -122,7 +122,7 @@ class FlowForge:
         async def list_steps():
             return step_list
 
-        static_files_path = pkg_resources.resource_filename("flowforgeai", "static/")
+        static_files_path = pkg_resources.resource_filename("promptmage", "static/")
         app.mount(
             "/",
             StaticFiles(directory=static_files_path, html=True),

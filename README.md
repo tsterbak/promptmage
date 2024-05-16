@@ -1,10 +1,10 @@
 <br />
 <div align="center">
-  <a href="https://github.com/tsterbak/flowforge">
-    <img src="images/flowforge-logo.png" alt="FlowForge-Logo" width="120" height="120">
+  <a href="https://github.com/tsterbak/promptmage">
+    <img src="images/flowforge-logo.png" alt="PromptMage-Logo" width="120" height="120">
   </a>
 
-  <h1 align="center">FlowForge</h1>
+  <h1 align="center">PromptMage</h1>
 
   <p align="center">
     simplifies the process of creating and managing LLM workflows as a self-hosted solution.
@@ -13,27 +13,27 @@
 
 ## About the Project
 
-"FlowForge" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution. It facilitates prompt testing and comparison, and it incorporates version control features to help users track the development of their prompts. Suitable for both small teams and large enterprises, "FlowForge" seeks to improve productivity and foster the practical use of LLM technology.
+"PromptMage" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution. It facilitates prompt testing and comparison, and it incorporates version control features to help users track the development of their prompts. Suitable for both small teams and large enterprises, "FlowForge" seeks to improve productivity and foster the practical use of LLM technology.
 
-The approach with "FlowForge" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
+The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
 
 
 ## Getting Started
 
 ### Installation
 
-To install flowforge, run the following command:
+To install promptmage, run the following command:
 
 ```bash
-pip install flowforgeai
+pip install promptmage 
 ```
 
 ## Usage
 
-To use flowforge, run the following command:
+To use promptmage, run the following command:
 
 ```bash
-flowforge serve <path-to-flow>
+promptmage cast <path-to-flow>
 ```
 
 ## Roadmap
@@ -43,7 +43,7 @@ Coming soon.
 
 ## Development
 
-To develop flowforge, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
+To develop PromptMage, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
 
 ## Contributing
 
@@ -61,7 +61,7 @@ We welcome contributions from the community! If you're interested in improving F
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Contact
-For any inquiries or further information, feel free to reach out at [flowforge@tobiassterbak.com](mailto:flowforge@tobiassterbak.com).
+For any inquiries or further information, feel free to reach out at [promptmage@tobiassterbak.com](mailto:promptmage@tobiassterbak.com).
 
 ## ❤️ Acknowledgements
 

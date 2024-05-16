@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from importlib import import_module
 
-from flowforgeai import FlowForge
+from promptmage import PromptMage
 
 
 def get_flow(file_path: str):
@@ -16,7 +16,7 @@ def get_flow(file_path: str):
     flow_instance = None
     for attr_name in dir(module):
         attr = getattr(module, attr_name)
-        if isinstance(attr, FlowForge):
+        if isinstance(attr, PromptMage):
             flow_instance = attr
             break
     return flow_instance

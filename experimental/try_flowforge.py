@@ -2,14 +2,14 @@ from time import sleep
 
 from experimental.src.functions import multiply
 
-import flowforgeai as ff
+import promptmage as pm
 
 
-flow = ff.FlowForge("flow")
+flow = pm.PromptMage("flow")
 
 
 @flow.step("step_one", prompt_id="prompt_one")
-def step_one(a: int, b: int, prompt: ff.Prompt) -> int:
+def step_one(a: int, b: int, prompt: pm.Prompt) -> int:
     print("Step one")
     print(prompt)
     return multiply(a, b)

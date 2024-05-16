@@ -1,7 +1,7 @@
-from flowforgeai import FlowForge
+from promptmage import PromptMage
 
 
-def test_init_forge():
-    forge = FlowForge(name="test")
-    assert forge.name == "test"
-    assert forge.steps == {}
+def test_init_mage():
+    mage = PromptMage(name="test")
+    assert mage.name == "test"
+    assert mage.steps == {}

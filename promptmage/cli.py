@@ -1,11 +1,11 @@
-"""This module contains the command line interface for the FlowForge package."""
+"""This module contains the command line interface for the PromptMage package."""
 
 import click
 import asyncio
 import uvicorn
 import multiprocessing
 
-from flowforgeai.utils import get_flow
+from promptmage.utils import get_flow
 
 
 def run_fastapi(app, host, port):
@@ -31,7 +31,7 @@ def serve(file_path, host, port):
     current_flow = get_flow(file_path)
 
     if not current_flow:
-        raise ValueError("No FlowForge instance found in the module.")
+        raise ValueError("No PromptMage instance found in the module.")
 
     # create the FastAPI app
     app = current_flow.get_api()

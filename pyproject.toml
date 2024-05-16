@@ -1,11 +1,12 @@
 [tool.poetry]
-name = "flowforgeai"
-version = "0.1.0"
-description = "\"FlowForge\" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution."
+name = "promptmage"
+version = "0.0.1"
+description = "\"PromptMage\" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution."
 authors = ["Tobias Sterbak <github@tobiassterbak.com>"]
 license = "MIT"
 readme = "README.md"
-include = ["flowforgeai/static"]
+include = ["promptmage/static"]
+homepage = "https://promptmage.io"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -26,4 +27,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-flowforge = "flowforgeai.cli:serve"
+promptmage = "promptmage.cli:serve"
