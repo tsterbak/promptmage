@@ -48,3 +48,14 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
+
+plugins:
+    - material-plausible
+
+extra:
+  analytics:
+    provider: plausible
+    domain: promptmage.io
+    #: If using custom domain proxy or self-hosting Plausible,
+    #: uncomment and specify script path here:
+    # src: "https://plausible.example.com/js/plausible.js"
