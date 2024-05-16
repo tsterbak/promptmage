@@ -23,6 +23,6 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material 
+      - run: pip install mkdocs-material material-plausible-plugin
       - run: mkdocs build
       - run: mkdocs gh-deploy --force --clean
