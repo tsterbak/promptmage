@@ -1,7 +1,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/tsterbak/promptmage">
-    <img src="images/flowforge-logo.png" alt="PromptMage-Logo" width="120" height="120">
+    <img src="images/promptmage-logo.png" alt="PromptMage-Logo" width="120" height="120">
   </a>
 
   <h1 align="center">PromptMage</h1>
@@ -49,7 +49,7 @@ To develop PromptMage, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
 
 Contributing
 
-We welcome contributions from the community! If you're interested in improving FlowForge, you can contribute in the following ways:
+We welcome contributions from the community! If you're interested in improving PromptMage, you can contribute in the following ways:
 
 * **Reporting Bugs**: Submit an issue in our repository, providing a detailed description of the problem and steps to reproduce it.
 * **Feature Requests**: Have ideas on how to make FlowForge better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
