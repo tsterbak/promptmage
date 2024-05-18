@@ -2,6 +2,7 @@
 
 from typing import List
 
+from promptmage.storage import StorageBackend
 from promptmage.prompt import Prompt
 
 
@@ -9,7 +10,7 @@ class PromptStore:
     """A class that stores and retrieves prompts with different backends."""
 
     def __init__(self, backend):
-        self.backend = backend
+        self.backend: StorageBackend = backend
 
     def store_prompt(self, prompt: str):
         """Store a prompt in the backend."""
