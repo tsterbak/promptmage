@@ -1,4 +1,4 @@
-from main import PromptMageFrontend
+from .frontend import PromptMageFrontend
 
 
 __all__ = ["PromptMageFrontend"]

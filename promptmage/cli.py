@@ -1,21 +1,11 @@
 """This module contains the command line interface for the PromptMage package."""
 
 import click
-import asyncio
 import uvicorn
-import multiprocessing
 
 from promptmage.utils import get_flow
-
-
-def run_fastapi(app, host, port):
-    # Run the FastAPI app
-    try:
-        uvicorn.run(app, host=host, port=port)
-    except KeyboardInterrupt:
-        pass
-    except asyncio.CancelledError:
-        pass
+from promptmage.api import PromptMageAPI
+from promptmage.frontend import PromptMageFrontend
 
 
 @click.command()
@@ -34,24 +24,14 @@ def serve(file_path, host, port):
         raise ValueError("No PromptMage instance found in the module.")
 
     # create the FastAPI app
-    app = current_flow.get_api()
+    app = PromptMageAPI(mage=current_flow).get_app()
 
     # create the frontend app
+    frontend = PromptMageFrontend(mage=current_flow)
+    frontend.init_from_api(app)
 
-    # Run the FastAPI app
-    fastapi_process = multiprocessing.Process(
-        target=run_fastapi, args=(app, host, port)
-    )
-
-    # Start both processes
-    fastapi_process.start()
-
-    # Wait for both processes to finish
-    try:
-        fastapi_process.join()
-    except KeyboardInterrupt:
-        fastapi_process.terminate()
-        fastapi_process.join()
+    # Run the applications
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
