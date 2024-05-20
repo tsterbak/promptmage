@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Path, Query
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -32,9 +33,18 @@ class PromptMageAPI:
         )
 
         # create index endpoint
-        # @app.get("/")
-        # async def index():
-        #    return HTMLResponse("<h1>Welcome to the FlowForge API</h1>")
+        @app.get("/")
+        async def index():
+            return HTMLResponse(
+                """<h1>Welcome to the PromptMage</h1>"""
+                """<h2>To see the API docs 📖, go to <a href='/docs'>/docs</a></h2>"""
+                """<h2>To access the API 🔮, go to <a href='/api'>/api</a></h2>"""
+                """<h2>To access the GUI 🧙, go to <a href='/gui'>/gui</a></h2>"""
+            )
+
+        @app.get("/api")
+        async def index():
+            return HTMLResponse("<h1>Welcome to the PromptMage API</h1>")
 
         # create the endpoints for each step
         step_list = []

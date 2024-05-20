@@ -5,6 +5,9 @@ from nicegui import app, ui
 
 from promptmage import PromptMage
 
+from .components import theme
+from promptmage.frontend.components.message import message
+
 
 class PromptMageFrontend:
 
@@ -13,12 +16,10 @@ class PromptMageFrontend:
 
     def init_from_api(self, fastapi_app: FastAPI) -> None:
         @ui.page("/")
-        def show():
-            ui.label("Hello, FastAPI!")
-
-            # NOTE dark mode will be persistent for each user across tabs and server restarts
-            ui.dark_mode().bind_value(app.storage.user, "dark_mode")
-            ui.checkbox("dark mode").bind_value(app.storage.user, "dark_mode")
+        def main_page():
+            with theme.frame("- Page A -"):
+                message("Page A")
+                ui.label("This page is defined in a function.")
 
         ui.run_with(
             fastapi_app,
