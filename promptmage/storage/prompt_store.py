@@ -16,6 +16,10 @@ class PromptStore:
         """Store a prompt in the backend."""
         self.backend.store_prompt(prompt.to_dict())
 
+    def get_prompt(self, prompt_id: str) -> str:
+        """Retrieve a prompt from the backend."""
+        return Prompt.from_dict(self.backend.get_prompt(prompt_id))
+
     def get_prompts(self) -> List[str]:
         """Retrieve all prompts from the backend."""
         return Prompt.from_dict(self.backend.get_prompts())
