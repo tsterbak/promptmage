@@ -17,7 +17,7 @@ class PromptMageFrontend:
     def init_from_api(self, fastapi_app: FastAPI) -> None:
         @ui.page("/")
         def main_page():
-            with theme.frame("- Page A -"):
+            with theme.frame("Welcome to the PromptMage"):
                 message("Page A")
                 ui.label("This page is defined in a function.")
 

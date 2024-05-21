@@ -11,7 +11,7 @@ def frame(navigation_title: str):
         primary="#6E93D6", secondary="#53B689", accent="#111B1E", positive="#53B689"
     )
     with ui.header():
-        ui.label("Modularization Example").classes("font-bold")
+        ui.label(":mage:").classes("font-bold")
         ui.space()
         ui.label(navigation_title)
         ui.space()
