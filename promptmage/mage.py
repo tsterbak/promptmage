@@ -30,20 +30,21 @@ class PromptMage:
             else:
                 prompt = None
 
-            # This is the actual decorator.
             @wraps(func)
             def wrapper(*args, **kwargs):
                 logger.info(f"Running step: {name}")
                 logger.info(f"Step input: {args}, {kwargs}")
+                # TODO: store input in the backend
                 # If the prompt exists, add it to the kwargs.
                 if prompt:
                     kwargs["prompt"] = prompt
 
                 output = func(*args, **kwargs)
+                # TODO: store output in the backend
                 logger.info(f"Step output: {output}")
                 return output
 
-            self.steps[name] = wrapper  # partial(func, prompt=prompt)
+            self.steps[name] = wrapper
             return wrapper
 
         return decorator
