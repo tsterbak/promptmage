@@ -1,12 +1,16 @@
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from promptmage import PromptMage, Prompt
 from promptmage.storage import InMemoryBackend
 
 
+load_dotenv()
+
+
 client = OpenAI(
-    base_url="http://192.168.0.51:11434/v1",
-    api_key="ollama",  # required, but unused
+    # base_url="http://192.168.0.51:11434/v1",
+    # api_key="ollama",  # required, but unused
 )
 
 backend = InMemoryBackend(
@@ -31,7 +35,7 @@ def extract_facts(article: str, prompt: Prompt) -> str:
     """Extract the facts as a bullet list from an article."""
 
     response = client.chat.completions.create(
-        model="llama3:instruct",
+        model="gpt-3.5-turbo-0125",  # "llama3:instruct",
         messages=[
             {"role": "system", "content": prompt.system},
             {
@@ -47,7 +51,7 @@ def extract_facts(article: str, prompt: Prompt) -> str:
 def summarize_facts(facts: str, prompt: Prompt) -> str:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(
-        model="llama3:instruct",
+        model="gpt-3.5-turbo-0125",  # "llama3:instruct",
         messages=[
             {"role": "system", "content": prompt.system},
             {

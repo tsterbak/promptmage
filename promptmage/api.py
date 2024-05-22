@@ -48,8 +48,8 @@ class PromptMageAPI:
 
         # create the endpoints for each step
         step_list = []
-        for step_name, func in self.mage.steps.items():
-            signature = inspect.signature(func)
+        for step_name, step in self.mage.steps.items():
+            signature = inspect.signature(step.func)
             path = f"/api/{step_name}"
             params = []
 
@@ -80,7 +80,7 @@ class PromptMageAPI:
 
             # Update the signature for the endpoint function
             new_signature = signature.replace(parameters=params)
-            endpoint_func = self.create_endpoint_function(func, new_signature)
+            endpoint_func = self.create_endpoint_function(step.func, new_signature)
             setattr(
                 endpoint_func, "__signature__", new_signature
             )  # Update the signature for FastAPI to recognize

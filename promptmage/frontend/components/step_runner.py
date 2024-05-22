@@ -1,12 +1,13 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
-from nicegui import ui
 import inspect
+from typing import Callable
+from nicegui import ui
 
 from promptmage import Prompt
 
 
-def create_function_runner(func, prompt: Prompt):
+def create_function_runner(func: Callable, prompt: Prompt):
     input_fields = {}
     system_prompt_field = None
     user_prompt_field = None
