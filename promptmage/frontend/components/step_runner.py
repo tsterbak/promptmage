@@ -5,9 +5,12 @@ from typing import Callable
 from nicegui import ui
 
 from promptmage import Prompt
+from promptmage.storage import StorageBackend
 
 
-def create_function_runner(func: Callable, prompt: Prompt):
+def create_function_runner(
+    func: Callable, prompt: Prompt, prompt_store: StorageBackend
+):
     input_fields = {}
     system_prompt_field = None
     user_prompt_field = None
@@ -17,6 +20,7 @@ def create_function_runner(func: Callable, prompt: Prompt):
         inputs = {name: field.value for name, field in input_fields.items()}
         prompt.system = system_prompt_field.value
         prompt.user = user_prompt_field.value
+        prompt_store.store_prompt(prompt)
         result = func(**inputs, prompt=prompt)
         result_field.set_content(f"### Result:\n{str(result)}")
 

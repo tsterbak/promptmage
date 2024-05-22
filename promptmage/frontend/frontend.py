@@ -26,7 +26,8 @@ class PromptMageFrontend:
                             ui.label(f"{step.name} - {step.step_id}")
                             create_function_runner(
                                 step.func,
-                                self.mage.backend.get_prompt(step.func.__name__),
+                                step.get_prompt(),
+                                prompt_store=self.mage.prompt_store,
                             )()
 
         ui.run_with(

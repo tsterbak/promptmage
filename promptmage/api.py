@@ -46,6 +46,14 @@ class PromptMageAPI:
         async def index():
             return HTMLResponse("<h1>Welcome to the PromptMage API</h1>")
 
+        @app.get("/api/prompts")
+        async def list_prompts():
+            return self.mage.prompt_store.get_prompts()
+
+        @app.get("/api/data")
+        async def list_data():
+            return self.mage.data_store.get_all_data()
+
         # create the endpoints for each step
         step_list = []
         for step_name, step in self.mage.steps.items():

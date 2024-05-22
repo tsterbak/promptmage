@@ -32,6 +32,8 @@ class RunData:
             "prompt": self.prompt.to_dict(),
             "input_data": self.input_data,
             "output_data": self.output_data,
+            "run_id": self.run_id,
+            "run_time": self.run_time,
         }
 
     @classmethod

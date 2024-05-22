@@ -2,7 +2,12 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from promptmage import PromptMage, Prompt
-from promptmage.storage import InMemoryBackend
+from promptmage.storage import (
+    InMemoryPromptBackend,
+    InMemoryDataBackend,
+    PromptStore,
+    DataStore,
+)
 
 
 load_dotenv()
@@ -13,21 +18,31 @@ client = OpenAI(
     # api_key="ollama",  # required, but unused
 )
 
-backend = InMemoryBackend(
-    prompts={
-        "extract_facts": Prompt(
-            prompt_id="extract_facts",
-            system_prompt="You are a helpful assistant.",
-            user_prompt="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
-        ),
-        "summarize_facts": Prompt(
-            prompt_id="summarize_facts",
-            system_prompt="You are a helpful assistant.",
-            user_prompt="Summarize the following facts into a single sentence:\n\n{facts}",
-        ),
-    }
+# Setup the prompt store and data store
+prompt_store = PromptStore(backend=InMemoryPromptBackend())
+prompt_store.store_prompt(
+    Prompt(
+        prompt_id="extract_facts",
+        system="You are a helpful assistant.",
+        user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
+    )
 )
-mage = PromptMage(name="fact-extraction", backend=backend)
+prompt_store.store_prompt(
+    Prompt(
+        prompt_id="summarize_facts",
+        system="You are a helpful assistant.",
+        user="Summarize the following facts into a single sentence:\n\n{facts}",
+    )
+)
+data_store = DataStore(backend=InMemoryDataBackend())
+
+# Create a new PromptMage instance
+mage = PromptMage(
+    name="fact-extraction", prompt_store=prompt_store, data_store=data_store
+)
+
+
+# Application code
 
 
 @mage.step(name="extract", prompt_id="extract_facts")
