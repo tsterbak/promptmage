@@ -20,20 +20,22 @@ client = OpenAI(
 
 # Setup the prompt store and data store
 prompt_store = PromptStore(backend=InMemoryPromptBackend())
-prompt_store.store_prompt(
-    Prompt(
-        prompt_id="extract_facts",
-        system="You are a helpful assistant.",
-        user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
-    )
-)
-prompt_store.store_prompt(
-    Prompt(
-        prompt_id="summarize_facts",
-        system="You are a helpful assistant.",
-        user="Summarize the following facts into a single sentence:\n\n{facts}",
-    )
-)
+# prompt_store.store_prompt(
+#     Prompt(
+#         prompt_id="extract_facts",
+#         template_vars=["article"],
+#         system="You are a helpful assistant.",
+#         user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
+#     )
+# )
+# prompt_store.store_prompt(
+#     Prompt(
+#         prompt_id="summarize_facts",
+#         template_vars=["facts"],
+#         system="You are a helpful assistant.",
+#         user="Summarize the following facts into a single sentence:\n\n{facts}",
+#     )
+# )
 data_store = DataStore(backend=InMemoryDataBackend())
 
 # Create a new PromptMage instance

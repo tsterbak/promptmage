@@ -1,4 +1,5 @@
 import uuid
+import inspect
 from loguru import logger
 from functools import wraps
 from typing import Dict, Callable
@@ -32,14 +33,12 @@ class PromptMage:
         self.steps: Dict = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
-    def step(
-        self, name: str, prompt_id: str = None, depends_on: str = None
-    ) -> Callable:
+    def step(self, name: str, prompt_id: str, depends_on: str = None) -> Callable:
         """Decorator to add a step to the PromptMage instance.
 
         Args:
             name (str): The name of the step.
-            prompt_id (str, optional): The ID of the prompt to use for this step. Defaults to None.
+            prompt_id (str): The ID of the prompt to use for this step. Defaults to None.
             depends_on (str, optional):
         """
 
@@ -50,13 +49,17 @@ class PromptMage:
                 logger.info(f"Running step: {self.name}...")
                 logger.info(f"Step input: {args}, {kwargs}")
                 # Get the prompt from the backend if it exists.
-                if prompt_id:
-                    prompt = self.prompt_store.get_prompt(prompt_id)
-                else:
-                    prompt = None
-                # If the prompt exists, add it to the kwargs.
-                if prompt:
-                    kwargs["prompt"] = prompt
+                prompt = self.prompt_store.get_prompt(prompt_id)
+                # extract the template variables from the function signature
+                if prompt.template_vars == []:
+                    sig = inspect.signature(func)
+                    prompt.template_vars = [
+                        param for param in sig.parameters if param != "prompt"
+                    ]
+                    # Store the updated prompt
+                    self.prompt_store.store_prompt(prompt)
+                # Add the prompt to the kwargs
+                kwargs["prompt"] = prompt
                 try:
                     results = func(*args, **kwargs)
                 except KeyError as e:

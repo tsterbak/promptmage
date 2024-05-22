@@ -10,6 +10,7 @@ from .components.step_runner import create_function_runner
 
 
 class PromptMageFrontend:
+    """A class that creates a frontend for a PromptMage instance."""
 
     def __init__(self, mage: PromptMage):
         self.mage = mage
@@ -17,6 +18,8 @@ class PromptMageFrontend:
     def init_from_api(
         self, fastapi_app: FastAPI, favicon="../static/favicon.ico"
     ) -> None:
+        """Initialize the frontend from a FastAPI application."""
+
         @ui.page("/", title="PromptMage")
         def main_page():
             with theme.frame("Welcome to the PromptMage"):

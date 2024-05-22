@@ -14,6 +14,7 @@ from promptmage import PromptMage
 
 
 class PromptMageAPI:
+    """A class that creates a FastAPI application to serve a PromptMage instance."""
 
     def __init__(self, mage: PromptMage):
         self.mage = mage
@@ -43,7 +44,7 @@ class PromptMageAPI:
             )
 
         @app.get("/api")
-        async def index():
+        async def root():
             return HTMLResponse("<h1>Welcome to the PromptMage API</h1>")
 
         @app.get("/api/prompts")

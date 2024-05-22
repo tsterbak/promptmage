@@ -5,6 +5,7 @@ from loguru import logger
 
 from promptmage.storage import StorageBackend
 from promptmage.prompt import Prompt
+from promptmage.exceptions import PromptNotFoundException
 
 
 class PromptStore:
@@ -21,7 +22,19 @@ class PromptStore:
     def get_prompt(self, prompt_id: str) -> Prompt:
         """Retrieve a prompt from the backend."""
         logger.info(f"Retrieving prompt with ID: {prompt_id}")
-        return self.backend.get_prompt(prompt_id)
+        try:
+            return self.backend.get_prompt(prompt_id)
+        except PromptNotFoundException:
+            logger.error(
+                f"Prompt with ID {prompt_id} not found, returning an empty prompt."
+            )
+            # return an empty prompt if the prompt is not found
+            return Prompt(
+                prompt_id=prompt_id,
+                system="You are a helpful assistant.",
+                user="",
+                template_vars=[],
+            )
 
     def get_prompts(self) -> List[Prompt]:
         """Retrieve all prompts from the backend."""

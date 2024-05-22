@@ -5,6 +5,7 @@ from typing import Dict
 from promptmage.prompt import Prompt
 from promptmage.run_data import RunData
 from promptmage.storage import StorageBackend
+from promptmage.exceptions import PromptNotFoundException
 
 
 class InMemoryPromptBackend(StorageBackend):
@@ -19,6 +20,8 @@ class InMemoryPromptBackend(StorageBackend):
 
     def get_prompt(self, prompt_id: str) -> str:
         """Retrieve a prompt from memory."""
+        if prompt_id not in self.prompts:
+            raise PromptNotFoundException(f"Prompt with ID {prompt_id} not found.")
         return Prompt.from_dict(self.prompts.get(prompt_id))
 
     def get_prompts(self) -> Dict:
