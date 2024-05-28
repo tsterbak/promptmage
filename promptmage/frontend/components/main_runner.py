@@ -1,7 +1,7 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 import inspect
-from nicegui import ui
+from nicegui import ui, run
 from loguru import logger
 
 from promptmage import PromptMage
@@ -12,11 +12,11 @@ def create_main_runner(mage: PromptMage):
     result_field = None
     flow_func = mage.get_run_function(start_from=None)
 
-    def run_function():
+    async def run_function():
         inputs = {name: field.value for name, field in input_fields.items()}
-        result = flow_func(**inputs)
+        result = await run.io_bound(flow_func, **inputs)
         result_field.set_content(f"{str(result)}")
-        ui.update()
+        result_field.update()
 
     def build_ui():
         nonlocal result_field

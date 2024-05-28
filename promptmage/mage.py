@@ -53,7 +53,7 @@ class PromptMage:
 
             @wraps(func)
             def wrapper(*args, **kwargs):
-                logger.info(f"Running step: {self.name}...")
+                logger.info(f"Running step: {name}...")
                 logger.info(f"Step input: {args}, {kwargs}")
                 # Get the prompt from the backend if it exists.
                 prompt = self.prompt_store.get_prompt(prompt_id)
@@ -76,8 +76,9 @@ class PromptMage:
                 if self.data_store:
                     run_data = RunData(
                         run_id=uuid.uuid4(),
+                        step_name=name,
                         prompt=prompt,
-                        input_data=args,
+                        input_data=args[0] if args else None,
                         output_data=results,
                     )
                     self.data_store.store_data(run_data)
@@ -219,7 +220,7 @@ class MageStep:
     def execute(self, **inputs):
         for key, value in inputs.items():
             self.input_values[key] = value
-        self.result = self.func(self.input_values)
+        self.result = self.func(**self.input_values)
         # run the callbacks
         for callback in self._callbacks:
             callback()

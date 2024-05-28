@@ -7,8 +7,9 @@ from promptmage import PromptMage
 from promptmage.mage import MageStep
 
 from .components import theme
-from .components.step_runner import create_function_runner
 from .components.main_runner import create_main_runner
+from .components.step_runner import create_function_runner
+from .components.runs_page import create_runs_view
 
 
 class PromptMageFrontend:
@@ -26,12 +27,12 @@ class PromptMageFrontend:
         def main_page():
             with theme.frame("Welcome to the PromptMage"):
                 with ui.row().style("flex-wrap: wrap;"):
+                    # Create a card for the mage
                     with ui.column().style("flex-wrap: wrap;"):
                         with ui.card():
                             ui.label("Run all steps")
                             create_main_runner(self.mage)()
-                            ui.update()
-
+                    # Create a card for each step
                     with ui.column().style("flex-wrap: wrap;"):
                         step: MageStep
                         for step in self.mage.steps.values():
@@ -41,7 +42,11 @@ class PromptMageFrontend:
                                 with ui.card():
                                     ui.label(f"{step.name} - {step.step_id}")
                                     create_function_runner(step)()
-                                    ui.update()
+
+        @ui.page("/runs", title="PromptMage - Runs")
+        def runs_page():
+            with theme.frame("Runs"):
+                create_runs_view(self.mage.data_store)()
 
         ui.run_with(
             fastapi_app,

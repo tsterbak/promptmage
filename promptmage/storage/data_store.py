@@ -1,6 +1,6 @@
 """This module contains the DataStore class, which implements the storage and retrieval of data with different backends."""
 
-from typing import List, Dict
+from typing import Dict
 from loguru import logger
 
 from promptmage.storage import StorageBackend
