@@ -36,12 +36,7 @@ class PromptMageFrontend:
                     with ui.column().style("flex-wrap: wrap;"):
                         step: MageStep
                         for step in self.mage.steps.values():
-                            with ui.expansion(
-                                f"Step: {step.name}", icon="run_circle", group="steps"
-                            ).classes("w-full").style("width: 650px;"):
-                                with ui.card():
-                                    ui.label(f"{step.name} - {step.step_id}")
-                                    create_function_runner(step)()
+                            create_function_runner(step)()
 
         @ui.page("/runs", title="PromptMage - Runs")
         def runs_page():

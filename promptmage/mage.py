@@ -215,14 +215,17 @@ class MageStep:
                 self.input_values[param.name] = None
 
         # callbacks for the frontend
-        self._callbacks = []
+        self._input_callbacks = []
+        self._output_callbacks = []
 
     def execute(self, **inputs):
         for key, value in inputs.items():
             self.input_values[key] = value
+        for callback in self._input_callbacks:
+            callback()
         self.result = self.func(**self.input_values)
         # run the callbacks
-        for callback in self._callbacks:
+        for callback in self._output_callbacks:
             callback()
         return self.result
 
@@ -235,5 +238,8 @@ class MageStep:
     def set_prompt(self, prompt: Prompt):
         self.prompt_store.store_prompt(prompt)
 
-    def on_change(self, callback):
-        self._callbacks.append(callback)
+    def on_input_change(self, callback):
+        self._input_callbacks.append(callback)
+
+    def on_output_change(self, callback):
+        self._output_callbacks.append(callback)
