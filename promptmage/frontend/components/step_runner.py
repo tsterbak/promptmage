@@ -1,8 +1,13 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
-from nicegui import ui
+from nicegui import ui, run
 
 from promptmage.mage import MageStep
+
+
+RUNNING_ICON = "run_circle"
+NOT_RUNNING_ICON = "circle"
+SUCCESS_RUN_ICON = "check_circle"
 
 
 def create_function_runner(step: MageStep):
@@ -11,18 +16,22 @@ def create_function_runner(step: MageStep):
     user_prompt_field = None
     result_field = None
     expansion_tab = (
-        ui.expansion(f"Step: {step.name}", group="steps", icon="circle")
+        ui.expansion(f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}")
         .classes("w-full")
         .style("width: 650px;")
     )
     prompt = step.get_prompt()
 
-    def run_function():
+    async def run_function():
+        expansion_tab.props("icon=run_circle")
+        expansion_tab.update()
         inputs = {name: field.value for name, field in input_fields.items()}
         prompt.system = system_prompt_field.value
         prompt.user = user_prompt_field.value
         step.set_prompt(prompt)
-        result = step.execute(**inputs)
+        result = await run.io_bound(step.execute, **inputs)
+        expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
+        expansion_tab.update()
 
     def set_prompt():
         prompt.system = system_prompt_field.value
@@ -33,14 +42,14 @@ def create_function_runner(step: MageStep):
         for name, field in input_fields.items():
             field.set_value(step.input_values[name])
             field.update()
-        expansion_tab.props("icon=run_circle")
+        expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
 
     def update_results():
         result_field.set_content(f"{step.result}")
         result_field.update()
 
-        expansion_tab.props("icon=circle")
+        expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
 
     step.on_input_change(update_inputs)

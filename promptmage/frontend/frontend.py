@@ -18,9 +18,7 @@ class PromptMageFrontend:
     def __init__(self, mage: PromptMage):
         self.mage = mage
 
-    def init_from_api(
-        self, fastapi_app: FastAPI, favicon="../static/favicon.ico"
-    ) -> None:
+    def init_from_api(self, fastapi_app: FastAPI) -> None:
         """Initialize the frontend from a FastAPI application."""
 
         @ui.page("/", title="PromptMage")
@@ -47,4 +45,6 @@ class PromptMageFrontend:
             fastapi_app,
             mount_path="/gui",  # NOTE this can be omitted if you want the paths passed to @ui.page to be at the root
             storage_secret="pick your private secret here",  # NOTE setting a secret is optional but allows for persistent storage per user
+            dark=False,
+            favicon="🧙",
         )
