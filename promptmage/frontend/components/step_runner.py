@@ -1,28 +1,41 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
-import inspect
-from typing import Callable
 from nicegui import ui
 
-from promptmage import Prompt
-from promptmage.storage import StorageBackend
+from promptmage.mage import MageStep
 
 
-def create_function_runner(
-    func: Callable, prompt: Prompt, prompt_store: StorageBackend
-):
+def create_function_runner(step: MageStep):
     input_fields = {}
     system_prompt_field = None
     user_prompt_field = None
     result_field = None
+    prompt = step.get_prompt()
 
     def run_function():
         inputs = {name: field.value for name, field in input_fields.items()}
         prompt.system = system_prompt_field.value
         prompt.user = user_prompt_field.value
-        prompt_store.store_prompt(prompt)
-        result = func(**inputs, prompt=prompt)
+        step.set_prompt(prompt)
+        result = step.execute(**inputs)
         result_field.set_content(f"{str(result)}")
+
+    def set_prompt():
+        prompt.system = system_prompt_field.value
+        prompt.user = user_prompt_field.value
+        step.set_prompt(prompt)
+
+    def update_inputs():
+        for name, field in input_fields.items():
+            field.set_value(step.input_values[name])
+            field.update()
+
+    def update_results():
+        result_field.set_content(f"{step.result}")
+        result_field.update()
+
+    step.on_change(update_inputs)
+    step.on_change(update_results)
 
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field
@@ -40,18 +53,22 @@ def create_function_runner(
                 )
 
             ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
-            for param in inspect.signature(func).parameters.values():
+            for param in step.signature.parameters.values():
                 if param.name != "prompt":
                     with ui.row():
                         ui.label(f"{param.name}:").style("width: 100px;")
-                        input_fields[param.name] = ui.textarea().style(
-                            "flex-grow: 1; overflow: auto;"
-                        )
+                        input_fields[param.name] = ui.textarea(
+                            value=step.input_values[param.name]
+                        ).style("flex-grow: 1; overflow: auto;")
 
-            ui.button("Run", on_click=run_function).style("margin-top: 10px;")
+            with ui.row():
+                ui.button("Run", on_click=run_function).style("margin-top: 10px;")
+                ui.button("Set prompt", on_click=set_prompt).style(
+                    "margin-top: 10px; margin-left: 10px;"
+                )
             ui.separator()
             ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
-            result_field = ui.markdown("").style(
+            result_field = ui.markdown(f"{step.result}" if step.result else "").style(
                 "margin-top: 20px; color: blue; height: 200px; overflow-y: auto;"
             )
 

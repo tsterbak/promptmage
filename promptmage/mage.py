@@ -156,16 +156,20 @@ class PromptMage:
                     results[func_id] = func_node.execute(**initial_inputs)
                 else:
                     if self.dependencies[func_id]:
-                        inputs = [
-                            self.steps[dep].result for dep in self.dependencies[func_id]
-                        ]
+                        inputs = {
+                            param: self.steps[dep].result
+                            for dep, param in zip(
+                                self.dependencies[func_id],
+                                func_node.signature.parameters,
+                            )
+                        }
                     else:
-                        inputs = [
-                            func_node.input_values[param]
+                        inputs = {
+                            param: func_node.input_values[param]
                             for param in func_node.signature.parameters
-                        ]
-                    results[func_id] = func_node.execute(*inputs)
-            # return the last result
+                        }
+                    results[func_id] = func_node.execute(**inputs)
+            # return the results of the last function
             return results[order[-1]]
 
         # Set the signature of the returned function to match the first function in the graph
@@ -202,15 +206,24 @@ class MageStep:
 
         # Initialize input values with default parameter values
         for param in self.signature.parameters.values():
+            if param.name == "prompt":
+                continue
             if param.default is not inspect.Parameter.empty:
                 self.input_values[param.name] = param.default
             else:
                 self.input_values[param.name] = None
 
+        # callbacks for the frontend
+        self._callbacks = []
+
     def execute(self, **inputs):
-        result = self.func(**inputs)
-        self.result = result
-        return result
+        for key, value in inputs.items():
+            self.input_values[key] = value
+        self.result = self.func(self.input_values)
+        # run the callbacks
+        for callback in self._callbacks:
+            callback()
+        return self.result
 
     def __repr__(self):
         return f"Step(prompt_id={self.prompt_id}, name={self.name}, prompt_id={self.prompt_id}, depends_on={self.depends_on})"
@@ -220,3 +233,6 @@ class MageStep:
 
     def set_prompt(self, prompt: Prompt):
         self.prompt_store.store_prompt(prompt)
+
+    def on_change(self, callback):
+        self._callbacks.append(callback)
