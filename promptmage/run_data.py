@@ -16,10 +16,10 @@ class RunData:
         prompt: Prompt,
         input_data: Dict,
         output_data: Dict,
-        run_id: str = str(uuid.uuid4()),
+        run_id: str | None = None,
         run_time: datetime = datetime.now(),
     ):
-        self.run_id = run_id
+        self.run_id = run_id if run_id else str(uuid.uuid4())
         self.step_name = step_name
         self.run_time = run_time
         self.prompt = prompt

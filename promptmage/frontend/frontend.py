@@ -10,6 +10,7 @@ from .components import theme
 from .components.main_runner import create_main_runner
 from .components.step_runner import create_function_runner
 from .components.runs_page import create_runs_view
+from .components.prompts_page import create_prompts_view
 
 
 class PromptMageFrontend:
@@ -40,6 +41,11 @@ class PromptMageFrontend:
         def runs_page():
             with theme.frame("Runs"):
                 create_runs_view(self.mage.data_store)()
+
+        @ui.page("/prompts", title="PromptMage - Prompts")
+        def prompts_page():
+            with theme.frame("Prompts"):
+                create_prompts_view(self.mage.prompt_store)()
 
         ui.run_with(
             fastapi_app,

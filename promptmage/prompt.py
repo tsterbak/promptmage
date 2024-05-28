@@ -1,5 +1,6 @@
 """This module contains the Prompt class, which represents a prompt."""
 
+import uuid
 from typing import Dict, List
 
 
@@ -16,20 +17,23 @@ class Prompt:
 
     def __init__(
         self,
-        prompt_id: str,
+        name: str,
         system: str,
         user: str,
         template_vars: List[str],
         version: int = 1,
+        id: str | None = None,
     ):
-        self.prompt_id = prompt_id
+        self.name = name
+        self.id = id if id else str(uuid.uuid4())
         self.system = system
         self.user = user
         self.version = version
         self.template_vars = template_vars
 
     def __repr__(self):
-        return f"Prompt(id={self.prompt_id}, \
+        return f"Prompt(id={self.id}, \
+                name={self.name}, \
                 version={self.version}, \
                 system={self.system}, \
                 user={self.user}), \
@@ -37,7 +41,8 @@ class Prompt:
 
     def to_dict(self):
         return {
-            "prompt_id": self.prompt_id,
+            "name": self.name,
+            "id": self.id,
             "system": self.system,
             "user": self.user,
             "version": self.version,
@@ -47,7 +52,8 @@ class Prompt:
     @classmethod
     def from_dict(cls, data: Dict) -> "Prompt":
         return cls(
-            prompt_id=data["prompt_id"],
+            name=data["name"],
+            id=data["id"],
             system=data["system"],
             user=data["user"],
             template_vars=data["template_vars"],

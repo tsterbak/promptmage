@@ -39,13 +39,13 @@ class PromptMage:
         self.indegree = defaultdict(int)
 
     def step(
-        self, name: str, prompt_id: str, depends_on: List[str] | str | None = None
+        self, name: str, prompt_name: str, depends_on: List[str] | str | None = None
     ) -> Callable:
         """Decorator to add a step to the PromptMage instance.
 
         Args:
             name (str): The name of the step.
-            prompt_id (str): The ID of the prompt to use for this step. Defaults to None.
+            prompt_name (str): The name of the prompt to use for this step. Defaults to None.
             depends_on (str, optional):
         """
 
@@ -56,7 +56,7 @@ class PromptMage:
                 logger.info(f"Running step: {name}...")
                 logger.info(f"Step input: {args}, {kwargs}")
                 # Get the prompt from the backend if it exists.
-                prompt = self.prompt_store.get_prompt(prompt_id)
+                prompt = self.prompt_store.get_prompt(prompt_name)
                 # extract the template variables from the function signature
                 if prompt.template_vars == []:
                     sig = inspect.signature(func)
@@ -75,10 +75,9 @@ class PromptMage:
                 # Store input and output data
                 if self.data_store:
                     run_data = RunData(
-                        run_id=uuid.uuid4(),
                         step_name=name,
                         prompt=prompt,
-                        input_data=args[0] if args else None,
+                        input_data={k: v for k, v in kwargs.items() if k != "prompt"},
                         output_data=results,
                     )
                     self.data_store.store_data(run_data)
@@ -89,7 +88,7 @@ class PromptMage:
                 name=name,
                 func=wrapper,
                 prompt_store=self.prompt_store,
-                prompt_id=prompt_id,
+                prompt_name=prompt_name,
                 depends_on=depends_on,
             )
 
@@ -190,15 +189,15 @@ class MageStep:
         name: str,
         func: Callable,
         prompt_store: PromptStore,
-        prompt_id: str | None = None,
+        prompt_name: str | None = None,
         depends_on: str | None = None,
     ):
-        self.step_id = uuid.uuid4()
+        self.step_id = str(uuid.uuid4())
         self.name = name
         self.func = func
         self.signature = inspect.signature(func)
         self.prompt_store = prompt_store
-        self.prompt_id = prompt_id
+        self.prompt_name = prompt_name
         self.depends_on = depends_on
 
         # store inputs and results
@@ -230,10 +229,10 @@ class MageStep:
         return self.result
 
     def __repr__(self):
-        return f"Step(prompt_id={self.prompt_id}, name={self.name}, prompt_id={self.prompt_id}, depends_on={self.depends_on})"
+        return f"Step(step_id={self.step_id}, name={self.name}, prompt_name={self.prompt_name}, depends_on={self.depends_on})"
 
     def get_prompt(self) -> Prompt:
-        return self.prompt_store.get_prompt(self.prompt_id)
+        return self.prompt_store.get_prompt(self.prompt_name)
 
     def set_prompt(self, prompt: Prompt):
         self.prompt_store.store_prompt(prompt)

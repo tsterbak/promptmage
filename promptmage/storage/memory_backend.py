@@ -16,13 +16,13 @@ class InMemoryPromptBackend(StorageBackend):
 
     def store_prompt(self, prompt: Prompt):
         """Store a prompt in memory."""
-        self.prompts[prompt.prompt_id] = prompt.to_dict()
+        self.prompts[prompt.name] = prompt.to_dict()
 
-    def get_prompt(self, prompt_id: str) -> str:
+    def get_prompt(self, prompt_name: str) -> str:
         """Retrieve a prompt from memory."""
-        if prompt_id not in self.prompts:
-            raise PromptNotFoundException(f"Prompt with ID {prompt_id} not found.")
-        return Prompt.from_dict(self.prompts.get(prompt_id))
+        if prompt_name not in self.prompts:
+            raise PromptNotFoundException(f"Prompt with name {prompt_name} not found.")
+        return Prompt.from_dict(self.prompts.get(prompt_name))
 
     def get_prompts(self) -> Dict:
         """Retrieve all prompts from memory."""
