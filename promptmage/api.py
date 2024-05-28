@@ -60,32 +60,8 @@ class PromptMageAPI:
         for step_name, step in self.mage.steps.items():
             signature = inspect.signature(step.func)
             path = f"/api/{step_name}"
-            params = []
-
-            for name, param in signature.parameters.items():
-                # ignore prompt parameter
-                if name == "prompt":
-                    continue
-                if param.default is inspect.Parameter.empty:
-                    # Assume required parameters are path parameters
-                    new_param = inspect.Parameter(
-                        name,
-                        kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                        default=Path(..., description=f"Path parameter `{name}`"),
-                        annotation=param.annotation,
-                    )
-                    path += f"/{{{name}}}"  # Add to the path
-                else:
-                    # Parameters with defaults are query parameters
-                    new_param = inspect.Parameter(
-                        name,
-                        kind=inspect.Parameter.KEYWORD_ONLY,
-                        default=Query(
-                            param.default, description=f"Query parameter `{name}`"
-                        ),
-                        annotation=param.annotation,
-                    )
-                params.append(new_param)
+            params, path_variables = self._parameters_from_signature(signature)
+            path += path_variables
 
             # Update the signature for the endpoint function
             new_signature = signature.replace(parameters=params)
@@ -97,6 +73,17 @@ class PromptMageAPI:
             # Add the route to FastAPI
             app.add_api_route(path, endpoint_func, methods=["GET"])
             step_list.append({"name": step_name, "path": path})
+
+        # create an endpoint to run the full dependency graph of the flow
+        run_function = self.mage.get_run_function()
+        signature = inspect.signature(run_function)
+        path = "/api/run_flow"
+        params, path_variables = self._parameters_from_signature(signature)
+        path += path_variables
+        new_signature = signature.replace(parameters=params)
+        endpoint_func = self.create_endpoint_function(run_function, new_signature)
+        setattr(endpoint_func, "__signature__", new_signature)
+        app.add_api_route(path, endpoint_func, methods=["GET"])
 
         # add a route to list all available steps with their names and input variables
         @app.get("/api/steps")
@@ -110,6 +97,35 @@ class PromptMageAPI:
             name="static",
         )
         return app
+
+    def _parameters_from_signature(self, signature):
+        params = []
+        path = ""
+        for name, param in signature.parameters.items():
+            # ignore prompt parameter
+            if name == "prompt":
+                continue
+            if param.default is inspect.Parameter.empty:
+                # Assume required parameters are path parameters
+                new_param = inspect.Parameter(
+                    name,
+                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Path(..., description=f"Path parameter `{name}`"),
+                    annotation=param.annotation,
+                )
+                path += f"/{{{name}}}"  # Add to the path
+            else:
+                # Parameters with defaults are query parameters
+                new_param = inspect.Parameter(
+                    name,
+                    kind=inspect.Parameter.KEYWORD_ONLY,
+                    default=Query(
+                        param.default, description=f"Query parameter `{name}`"
+                    ),
+                    annotation=param.annotation,
+                )
+            params.append(new_param)
+        return params, path
 
     def create_endpoint_function(self, func, params):
         # Define the endpoint function using dynamic parameters

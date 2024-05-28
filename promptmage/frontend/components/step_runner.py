@@ -22,16 +22,16 @@ def create_function_runner(
         prompt.user = user_prompt_field.value
         prompt_store.store_prompt(prompt)
         result = func(**inputs, prompt=prompt)
-        result_field.set_content(f"### Result:\n{str(result)}")
+        result_field.set_content(f"{str(result)}")
 
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field
         with ui.column().style(
-            "border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; width: 600px; height: 600px; overflow-y: auto;"
+            "border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; width: 600px; height: 800px; overflow-y: auto;"
         ):
             ui.label("Step Runner").style("font-weight: bold; font-size: 1.5em;")
             with ui.row():
-                ui.label("Prompt:").style("width: 100px;")
+                ui.label("Prompts:").style("width: 100px;")
                 system_prompt_field = ui.textarea(value=prompt.system).style(
                     "flex-grow: 1; overflow: auto;"
                 )
@@ -39,6 +39,7 @@ def create_function_runner(
                     "flex-grow: 1; overflow: auto;"
                 )
 
+            ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
             for param in inspect.signature(func).parameters.values():
                 if param.name != "prompt":
                     with ui.row():
@@ -48,7 +49,9 @@ def create_function_runner(
                         )
 
             ui.button("Run", on_click=run_function).style("margin-top: 10px;")
-            result_field = ui.markdown("### Result will be displayed here.").style(
+            ui.separator()
+            ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
+            result_field = ui.markdown("").style(
                 "margin-top: 20px; color: blue; height: 200px; overflow-y: auto;"
             )
 

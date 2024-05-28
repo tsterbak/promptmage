@@ -20,22 +20,22 @@ client = OpenAI(
 
 # Setup the prompt store and data store
 prompt_store = PromptStore(backend=InMemoryPromptBackend())
-# prompt_store.store_prompt(
-#     Prompt(
-#         prompt_id="extract_facts",
-#         template_vars=["article"],
-#         system="You are a helpful assistant.",
-#         user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
-#     )
-# )
-# prompt_store.store_prompt(
-#     Prompt(
-#         prompt_id="summarize_facts",
-#         template_vars=["facts"],
-#         system="You are a helpful assistant.",
-#         user="Summarize the following facts into a single sentence:\n\n{facts}",
-#     )
-# )
+prompt_store.store_prompt(
+    Prompt(
+        prompt_id="extract_facts",
+        template_vars=["article"],
+        system="You are a helpful assistant.",
+        user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
+    )
+)
+prompt_store.store_prompt(
+    Prompt(
+        prompt_id="summarize_facts",
+        template_vars=["facts"],
+        system="You are a helpful assistant.",
+        user="Summarize the following facts into a single sentence:\n\n{facts}",
+    )
+)
 data_store = DataStore(backend=InMemoryDataBackend())
 
 # Create a new PromptMage instance
@@ -47,10 +47,9 @@ mage = PromptMage(
 # Application code
 
 
-@mage.step(name="extract", prompt_id="extract_facts")
+@mage.step(name="extract", prompt_id="extract_facts", depends_on=None)
 def extract_facts(article: str, prompt: Prompt) -> str:
     """Extract the facts as a bullet list from an article."""
-
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",  # "llama3:instruct",
         messages=[
@@ -64,7 +63,7 @@ def extract_facts(article: str, prompt: Prompt) -> str:
     return response.choices[0].message.content
 
 
-@mage.step(name="summarize", prompt_id="summarize_facts")
+@mage.step(name="summarize", prompt_id="summarize_facts", depends_on="extract")
 def summarize_facts(facts: str, prompt: Prompt) -> str:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(

@@ -2,7 +2,8 @@ import uuid
 import inspect
 from loguru import logger
 from functools import wraps
-from typing import Dict, Callable
+from collections import defaultdict, deque
+from typing import Dict, Callable, List
 
 
 # Local imports
@@ -33,7 +34,13 @@ class PromptMage:
         self.steps: Dict = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
-    def step(self, name: str, prompt_id: str, depends_on: str = None) -> Callable:
+        self.dependencies = defaultdict(list)
+        self.graph = defaultdict(list)
+        self.indegree = defaultdict(int)
+
+    def step(
+        self, name: str, prompt_id: str, depends_on: List[str] | str | None = None
+    ) -> Callable:
         """Decorator to add a step to the PromptMage instance.
 
         Args:
@@ -85,9 +92,88 @@ class PromptMage:
                 depends_on=depends_on,
             )
 
+            # store the dependencies
+            if depends_on:
+                self.dependencies[name] = (
+                    depends_on if isinstance(depends_on, list) else [depends_on]
+                )
+            else:
+                self.dependencies[name] = []
+
             return wrapper
 
         return decorator
+
+    def _build_dependency_graph(self):
+        # Build the graph and compute in-degrees of each node
+        self.graph.clear()
+        self.indegree.clear()
+
+        for func_id, deps in self.dependencies.items():
+            for dep in deps:
+                self.graph[dep].append(func_id)
+                self.indegree[func_id] += 1
+            if func_id not in self.indegree:
+                self.indegree[func_id] = 0
+
+    def topological_sort(self):
+        order = []
+        queue = deque([node for node in self.indegree if self.indegree[node] == 0])
+
+        while queue:
+            node = queue.popleft()
+            order.append(node)
+            for neighbor in self.graph[node]:
+                self.indegree[neighbor] -= 1
+                if self.indegree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        if len(order) == len(self.indegree):
+            return order
+        else:
+            raise ValueError(
+                "Cyclic dependency detected. This is currently not supported."
+            )
+
+    def get_run_function(self, start_from=None) -> Callable:
+        """Returns a function that runs the PromptMage graph starting from the given step.
+
+        It has the same signature as the first function in the graph and takes these inputs.
+        """
+        self._build_dependency_graph()
+        order = self.topological_sort()
+
+        start_index = 0
+        if start_from:
+            start_index = order.index(start_from)
+
+        def run_function(**initial_inputs):
+            results = {}
+            for func_id in order[start_index:]:
+                func_node: MageStep = self.steps[func_id]
+                if func_id == order[start_index] and initial_inputs:
+                    # If it's the first function and initial_inputs are provided, use them
+                    results[func_id] = func_node.execute(**initial_inputs)
+                else:
+                    if self.dependencies[func_id]:
+                        inputs = [
+                            self.steps[dep].result for dep in self.dependencies[func_id]
+                        ]
+                    else:
+                        inputs = [
+                            func_node.input_values[param]
+                            for param in func_node.signature.parameters
+                        ]
+                    results[func_id] = func_node.execute(*inputs)
+            # return the last result
+            return results[order[-1]]
+
+        # Set the signature of the returned function to match the first function in the graph
+        first_func_id = order[start_index]
+        first_func_node: MageStep = self.steps[first_func_id]
+        run_function.__signature__ = first_func_node.signature
+
+        return run_function
 
     def __repr__(self) -> str:
         return f"PromptMage(name={self.name}, steps={list(self.steps.keys())})"
@@ -105,12 +191,32 @@ class MageStep:
         self.step_id = uuid.uuid4()
         self.name = name
         self.func = func
+        self.signature = inspect.signature(func)
         self.prompt_store = prompt_store
         self.prompt_id = prompt_id
         self.depends_on = depends_on
+
+        # store inputs and results
+        self.input_values = {}
+        self.result = None
+
+        # Initialize input values with default parameter values
+        for param in self.signature.parameters.values():
+            if param.default is not inspect.Parameter.empty:
+                self.input_values[param.name] = param.default
+            else:
+                self.input_values[param.name] = None
+
+    def execute(self, **inputs):
+        result = self.func(**inputs)
+        self.result = result
+        return result
 
     def __repr__(self):
         return f"Step(prompt_id={self.prompt_id}, name={self.name}, prompt_id={self.prompt_id}, depends_on={self.depends_on})"
 
     def get_prompt(self) -> Prompt:
         return self.prompt_store.get_prompt(self.prompt_id)
+
+    def set_prompt(self, prompt: Prompt):
+        self.prompt_store.store_prompt(prompt)
