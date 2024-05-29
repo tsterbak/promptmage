@@ -37,8 +37,10 @@ pip install promptmage
 To use promptmage, run the following command:
 
 ```bash
-promptmage cast <path-to-flow>
+promptmage <path-to-flow>
 ```
+
+Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application.
 
 ## Roadmap
 
