@@ -17,7 +17,8 @@ from promptmage.frontend import PromptMageFrontend
     "--port", default=8000, type=int, help="The port to run the FastAPI server on."
 )
 def serve(file_path, host, port):
-    """Serve a FastAPI application containing a FlowForge instance from the given file."""
+    """Serve a FastAPI application containing a PromptMage instance from the given file."""
+    # TODO: Implement a multi-flow approach
     current_flow = get_flow(file_path)
 
     if not current_flow:
