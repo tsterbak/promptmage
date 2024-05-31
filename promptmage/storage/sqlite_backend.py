@@ -19,6 +19,7 @@ class SQLitePromptBackend(StorageBackend):
         self._create_table()
 
     def _init_db(self):
+        """Create the database if it doesn't exist."""
         conn = None
         try:
             conn = sqlite3.connect(self.db_path)
