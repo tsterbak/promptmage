@@ -8,6 +8,7 @@ class Prompt:
     """A class that represents a prompt.
 
     Attributes:
+        name (str): The name of the prompt.
         prompt_id (str): The ID of the prompt.
         system (str): The system that generated the prompt.
         user (str): The user that the prompt is for.

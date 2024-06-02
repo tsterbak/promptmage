@@ -6,7 +6,7 @@ from nicegui import ui
 def create_runs_view(data_store: DataStore):
 
     side_panel = ui.element("div").style(
-        "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000"
+        "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
 
     # Function to show the side panel with detailed information
@@ -22,7 +22,9 @@ def create_runs_view(data_store: DataStore):
                 ui.label(f"Step Name: {run_data['step_name']}")
                 ui.label(f"Run Time: {run_data['run_time']}")
                 ui.label(f"Prompt: {run_data['prompt']}")
-                ui.label(f"Input Data: {run_data['input_data']}")
+                ui.label("Input Data:")
+                for key, value in run_data["input_data"].items():
+                    ui.markdown(f"**{key}**: {value}")
                 ui.label(f"Output Data: {run_data['output_data']}")
         side_panel.style("transform:translateX(0%);")
         side_panel.update()
@@ -59,26 +61,21 @@ def create_runs_view(data_store: DataStore):
                 for _, run_data in runs.items()
             ]
 
-            table = ui.table(columns=columns, rows=rows)
+            table = ui.table(
+                columns=columns,
+                rows=rows,
+                pagination={
+                    "rowsPerPage": 20,
+                    "sortBy": "run_time",
+                    "page": 1,
+                    "descending": True,
+                },
+            )
 
             def on_row_click(event):
                 selected_run_index = event.args[-2]["run_id"]
                 show_side_panel(run_data=runs[selected_run_index])
 
             table.on("rowClick", on_row_click)
-
-        # with ui.column():
-        #     ui.label("Runs")
-        #     runs = data_store.get_all_data()
-        #     for run_id, run_data in runs.items():
-        #         with ui.card():
-        #             with ui.expansion(
-        #                 f"Run {run_id} of step \"{run_data['step_name']}\""
-        #             ).classes("w-full"):
-        #                 ui.label(f"Run time: {run_data['run_time']}")
-        #                 ui.label(f"Prompt: {run_data['prompt']}")
-        #                 ui.label(f"Input data: {run_data['input_data']}")
-        #                 ui.label(f"Output data: {run_data['output_data']}")
-        #             ui.update()
 
     return build_ui
