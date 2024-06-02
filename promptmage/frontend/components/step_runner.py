@@ -33,7 +33,6 @@ def create_function_runner(step: MageStep):
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
-            step.set_prompt(prompt)
         result = await run.io_bound(step.execute, **inputs)
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
@@ -110,7 +109,7 @@ def create_function_runner(step: MageStep):
                         ui.button("Run", on_click=run_function).style(
                             "margin-top: 10px;"
                         )
-                        ui.button("Set prompt", on_click=set_prompt).style(
+                        ui.button("Save prompt", on_click=set_prompt).style(
                             "margin-top: 10px; margin-left: 10px;"
                         )
                     ui.separator()
