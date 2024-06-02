@@ -38,7 +38,7 @@ class RunData:
 
     def to_dict(self) -> Dict:
         return {
-            "prompt": self.prompt.to_dict(),
+            "prompt": self.prompt.to_dict() if self.prompt else None,
             "step_name": self.step_name,
             "input_data": self.input_data,
             "output_data": self.output_data,

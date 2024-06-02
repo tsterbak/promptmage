@@ -30,7 +30,8 @@ class PromptStore:
             )
             # return an empty prompt if the prompt is not found
             return Prompt(
-                prompt_id=prompt_id,
+                name=prompt_id,
+                version=1,
                 system="You are a helpful assistant.",
                 user="",
                 template_vars=[],

@@ -1,6 +1,7 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 from nicegui import ui, run
+from loguru import logger
 
 from promptmage.mage import MageStep
 
@@ -20,15 +21,19 @@ def create_function_runner(step: MageStep):
         .classes("w-full")
         .style("width: 650px;")
     )
-    prompt = step.get_prompt()
+    if step.prompt_name:
+        prompt = step.get_prompt()
+    else:
+        prompt = None
 
     async def run_function():
         expansion_tab.props("icon=run_circle")
         expansion_tab.update()
         inputs = {name: field.value for name, field in input_fields.items()}
-        prompt.system = system_prompt_field.value
-        prompt.user = user_prompt_field.value
-        step.set_prompt(prompt)
+        if prompt is not None:
+            prompt.system = system_prompt_field.value
+            prompt.user = user_prompt_field.value
+            step.set_prompt(prompt)
         result = await run.io_bound(step.execute, **inputs)
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
@@ -87,12 +92,18 @@ def create_function_runner(step: MageStep):
                             with ui.row():
                                 ui.label("System:").style("width: 100px;")
                                 system_prompt_field = ui.textarea(
-                                    value=prompt.system
+                                    value=(
+                                        prompt.system
+                                        if prompt
+                                        else "No prompt supported"
+                                    )
                                 ).style("flex-grow: 1; overflow: auto;")
                             with ui.row():
                                 ui.label("User:").style("width: 100px;")
                                 user_prompt_field = ui.textarea(
-                                    value=prompt.user
+                                    value=(
+                                        prompt.user if prompt else "No prompt supported"
+                                    )
                                 ).style("flex-grow: 1; overflow: auto;")
 
                     with ui.row():

@@ -34,19 +34,28 @@ class PromptMage:
         self.steps: Dict = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
+        # store the dependency graph
         self.dependencies = defaultdict(list)
         self.graph = defaultdict(list)
         self.indegree = defaultdict(int)
 
+        # store pass_through_inputs
+        self.pass_through_inputs = {}
+
     def step(
-        self, name: str, prompt_name: str, depends_on: List[str] | str | None = None
+        self,
+        name: str,
+        prompt_name: str | None = None,
+        depends_on: List[str] | str | None = None,
+        pass_through_inputs: List[str] | None = None,
     ) -> Callable:
         """Decorator to add a step to the PromptMage instance.
 
         Args:
             name (str): The name of the step.
-            prompt_name (str): The name of the prompt to use for this step. Defaults to None.
-            depends_on (str, optional):
+            prompt_name (str, optional): The name of the prompt to use for this step. Defaults to None.
+            depends_on (str, optional): The name of the step that this step depends on. Defaults to None.
+            pass_through_inputs (List[str], optional): The list of inputs to pass through to the step that requires them. Defaults to None.
         """
 
         def decorator(func):
@@ -55,18 +64,38 @@ class PromptMage:
             def wrapper(*args, **kwargs):
                 logger.info(f"Running step: {name}...")
                 logger.info(f"Step input: {args}, {kwargs}")
+                sig = inspect.signature(func)
                 # Get the prompt from the backend if it exists.
-                prompt = self.prompt_store.get_prompt(prompt_name)
-                # extract the template variables from the function signature
-                if prompt.template_vars == []:
-                    sig = inspect.signature(func)
-                    prompt.template_vars = [
-                        param for param in sig.parameters if param != "prompt"
-                    ]
-                    # Store the updated prompt
-                    self.prompt_store.store_prompt(prompt)
-                # Add the prompt to the kwargs
-                kwargs["prompt"] = prompt
+                if prompt_name is not None:
+                    prompt = self.prompt_store.get_prompt(prompt_name)
+                    # extract the template variables from the function signature
+                    if prompt.template_vars == []:
+                        prompt.template_vars = [
+                            param for param in sig.parameters if param != "prompt"
+                        ]
+                        # Store the updated prompt
+                        self.prompt_store.store_prompt(prompt)
+                    # Add the prompt to the kwargs
+                    kwargs["prompt"] = prompt
+                # Store the pass_through_inputs
+                if pass_through_inputs:
+                    logger.info(f"Storing pass_through_inputs: {pass_through_inputs}")
+                    for var_name in pass_through_inputs:
+                        if var_name in kwargs:
+                            self.pass_through_inputs[var_name] = kwargs[var_name]
+                    logger.info(
+                        f"Stored pass_through_inputs: {self.pass_through_inputs}"
+                    )
+                # retrieve the pass_through_inputs if they exist
+                for var_name, value in self.pass_through_inputs.items():
+                    logger.info(
+                        f"Retrieving pass_through_input: {var_name} with value: {value}"
+                    )
+                    if var_name in sig.parameters and kwargs.get(var_name) is None:
+                        logger.info(
+                            f"Retrieving pass_through_input: {var_name} with value: {value}"
+                        )
+                        kwargs[var_name] = value
                 try:
                     results = func(*args, **kwargs)
                 except KeyError as e:
@@ -76,7 +105,7 @@ class PromptMage:
                 if self.data_store:
                     run_data = RunData(
                         step_name=name,
-                        prompt=prompt,
+                        prompt=prompt if prompt_name else None,
                         input_data={k: v for k, v in kwargs.items() if k != "prompt"},
                         output_data=results,
                     )

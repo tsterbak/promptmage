@@ -2,10 +2,12 @@
 
 import sqlite3
 import json
+import uuid
 from loguru import logger
 from typing import List, Dict
 
 from promptmage.prompt import Prompt
+from promptmage.exceptions import PromptNotFoundException
 from promptmage.run_data import RunData
 from promptmage.storage.storage_backend import StorageBackend
 
@@ -51,11 +53,11 @@ class SQLitePromptBackend(StorageBackend):
             cursor.execute(
                 "INSERT INTO prompts VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    prompt.id,
+                    str(uuid.uuid4()),
                     prompt.name,
                     prompt.system,
                     prompt.user,
-                    prompt.version,
+                    prompt.version + 1,
                     ",".join(prompt.template_vars),
                 ),
             )
@@ -65,9 +67,13 @@ class SQLitePromptBackend(StorageBackend):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM prompts WHERE name=?", (prompt_name,))
-            row = cursor.fetchone()
-            if row is None:
-                return None
+            rows = cursor.fetchall()
+            if rows is None:
+                raise PromptNotFoundException(
+                    f"Prompt with name {prompt_name} not found."
+                )
+            # select the latest version
+            row = sorted(rows, key=lambda row: row[4], reverse=True)[0]
             return Prompt(
                 id=row[0],
                 name=row[1],
@@ -121,7 +127,7 @@ class SQLiteDataBackend(StorageBackend):
             run_id TEXT PRIMARY KEY,
             run_time TEXT NOT NULL,
             step_name TEXT NOT NULL,
-            prompt TEXT NOT NULL,
+            prompt TEXT,
             input_data TEXT,
             output_data TEXT
         );
@@ -140,7 +146,7 @@ class SQLiteDataBackend(StorageBackend):
                     run_data.run_id,
                     run_data.run_time,
                     run_data.step_name,
-                    json.dumps(run_data.prompt.to_dict()),
+                    json.dumps(run_data.prompt.to_dict()) if run_data.prompt else None,
                     json.dumps(run_data.input_data),
                     json.dumps(run_data.output_data),
                 ),
@@ -158,7 +164,7 @@ class SQLiteDataBackend(StorageBackend):
                 run_id=row[0],
                 run_time=row[1],
                 step_name=row[2],
-                prompt=Prompt.from_dict(json.loads(row[3])),
+                prompt=Prompt.from_dict(json.loads(row[3])) if row[3] else None,
                 input_data=json.loads(row[4]),
                 output_data=json.loads(row[5]),
             )
@@ -174,7 +180,7 @@ class SQLiteDataBackend(StorageBackend):
                     run_id=row[0],
                     run_time=row[1],
                     step_name=row[2],
-                    prompt=Prompt.from_dict(json.loads(row[3])),
+                    prompt=Prompt.from_dict(json.loads(row[3])) if row[3] else None,
                     input_data=json.loads(row[4]),
                     output_data=json.loads(row[5]),
                 ).to_dict()
