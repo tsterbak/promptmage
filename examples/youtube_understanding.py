@@ -54,9 +54,26 @@ def create_outline(transcript: str, prompt: Prompt) -> str:
 
 
 @mage.step(
-    name="answer-question", prompt_name="answer-question", depends_on="create-outline"
+    name="extract-facts", prompt_name="extract-facts", depends_on="get-transcript"
 )
-def answer_question(outline: str, question: str, prompt: Prompt) -> str:
+def extract_facts(transcript: str, prompt: Prompt) -> str:
+    """Extract facts from the transcript of a YouTube video."""
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-0125",
+        messages=[
+            {"role": "system", "content": prompt.system},
+            {"role": "user", "content": prompt.user.format(transcript=transcript)},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+@mage.step(
+    name="answer-question",
+    prompt_name="answer-question",
+    depends_on=["create-outline", "extract-facts"],
+)
+def answer_question(outline: str, facts: str, question: str, prompt: Prompt) -> str:
     """Answer a question based on the outline of a YouTube video."""
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",
@@ -64,7 +81,9 @@ def answer_question(outline: str, question: str, prompt: Prompt) -> str:
             {"role": "system", "content": prompt.system},
             {
                 "role": "user",
-                "content": prompt.user.format(outline=outline, question=question),
+                "content": prompt.user.format(
+                    outline=outline, facts=facts, question=question
+                ),
             },
         ],
     )

@@ -68,7 +68,7 @@ class SQLitePromptBackend(StorageBackend):
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM prompts WHERE name=?", (prompt_name,))
             rows = cursor.fetchall()
-            if rows is None:
+            if len(rows) == 0:
                 raise PromptNotFoundException(
                     f"Prompt with name {prompt_name} not found."
                 )

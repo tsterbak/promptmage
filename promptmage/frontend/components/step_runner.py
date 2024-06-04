@@ -116,8 +116,6 @@ def create_function_runner(step: MageStep):
                     ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
                     result_field = ui.markdown(
                         f"{step.result}" if step.result else ""
-                    ).style(
-                        "margin-top: 20px; color: blue; height: 200px; overflow-y: auto;"
-                    )
+                    ).style("margin-top: 20px; color: blue; height: 200px;")
 
     return build_ui
