@@ -102,6 +102,12 @@ class SQLitePromptBackend(StorageBackend):
                 )
             return prompts
 
+    def delete_prompt(self, prompt_id: str):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM prompts WHERE id=?", (prompt_id,))
+            conn.commit()
+
 
 class SQLiteDataBackend(StorageBackend):
     """A class that stores the data in a SQLite database."""

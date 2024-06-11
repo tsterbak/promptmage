@@ -40,3 +40,8 @@ class PromptStore:
     def get_prompts(self) -> List[Prompt]:
         """Retrieve all prompts from the backend."""
         return self.backend.get_prompts()
+
+    def delete_prompt(self, prompt_id: str):
+        """Delete a prompt from the backend."""
+        logger.info(f"Deleting prompt with ID: {prompt_id}")
+        self.backend.delete_prompt(prompt_id)

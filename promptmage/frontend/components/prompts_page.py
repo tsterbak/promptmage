@@ -7,7 +7,6 @@ from promptmage.prompt import Prompt
 
 
 def create_prompts_view(prompt_store: PromptStore):
-
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
@@ -45,12 +44,15 @@ def create_prompts_view(prompt_store: PromptStore):
                         )
                         ui.button(
                             "Delete Prompt",
-                            on_click=lambda prompt_id=prompt.id: prompt_store.delete_prompt(
+                            on_click=lambda prompt_id=prompt.id: delete_prompt(
                                 prompt_id
                             ),
                         )
         side_panel.style("transform:translateX(0%);")
         side_panel.update()
+
+    def delete_prompt(prompt_id):
+        prompt_store.delete_prompt(prompt_id)
 
     # Function to hide the side panel
     def hide_side_panel():
