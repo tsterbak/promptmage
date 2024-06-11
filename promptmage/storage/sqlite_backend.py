@@ -124,9 +124,11 @@ class SQLiteDataBackend(StorageBackend):
     def _create_table(self):
         create_table_sql = """
         CREATE TABLE IF NOT EXISTS data (
-            run_id TEXT PRIMARY KEY,
+            step_run_id TEXT PRIMARY KEY,
             run_time TEXT NOT NULL,
             step_name TEXT NOT NULL,
+            run_id TEXT,
+            status TEXT NOT NULL,
             prompt TEXT,
             input_data TEXT,
             output_data TEXT
@@ -141,11 +143,13 @@ class SQLiteDataBackend(StorageBackend):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO data VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO data VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    run_data.run_id,
+                    run_data.step_run_id,
                     run_data.run_time,
                     run_data.step_name,
+                    run_data.run_id,
+                    run_data.status,
                     json.dumps(run_data.prompt.to_dict()) if run_data.prompt else None,
                     json.dumps(run_data.input_data),
                     json.dumps(run_data.output_data),
@@ -161,12 +165,14 @@ class SQLiteDataBackend(StorageBackend):
             if row is None:
                 return None
             return RunData(
-                run_id=row[0],
+                step_run_id=row[0],
                 run_time=row[1],
                 step_name=row[2],
-                prompt=Prompt.from_dict(json.loads(row[3])) if row[3] else None,
-                input_data=json.loads(row[4]),
-                output_data=json.loads(row[5]),
+                run_id=row[3],
+                status=row[4],
+                prompt=Prompt.from_dict(json.loads(row[5])) if row[5] else None,
+                input_data=json.loads(row[6]),
+                output_data=json.loads(row[7]),
             )
 
     def get_all_data(self) -> Dict[str, RunData]:
@@ -177,12 +183,14 @@ class SQLiteDataBackend(StorageBackend):
             run_data = {}
             for row in rows:
                 run_data[row[0]] = RunData(
-                    run_id=row[0],
+                    step_run_id=row[0],
                     run_time=row[1],
                     step_name=row[2],
-                    prompt=Prompt.from_dict(json.loads(row[3])) if row[3] else None,
-                    input_data=json.loads(row[4]),
-                    output_data=json.loads(row[5]),
+                    run_id=row[3],
+                    status=row[4],
+                    prompt=Prompt.from_dict(json.loads(row[5])) if row[5] else None,
+                    input_data=json.loads(row[6]),
+                    output_data=json.loads(row[7]),
                 ).to_dict()
 
             return run_data

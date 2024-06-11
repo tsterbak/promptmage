@@ -18,8 +18,10 @@ def create_runs_view(data_store: DataStore):
             ):
                 ui.button("Hide", on_click=hide_side_panel)
                 # display run data
+                ui.label(f"Step Run ID: {run_data['step_run_id']}")
                 ui.label(f"Run ID: {run_data['run_id']}")
                 ui.label(f"Step Name: {run_data['step_name']}")
+                ui.label(f"Status: {run_data['status']}")
                 ui.label(f"Run Time: {run_data['run_time']}")
                 ui.label(f"Prompt: {run_data['prompt']}")
                 ui.label("Input Data:")
@@ -43,7 +45,14 @@ def create_runs_view(data_store: DataStore):
             # Create a table with clickable rows
             columns = [
                 {"name": "run_id", "label": "run_id", "field": "run_id"},
+                {"name": "step_run_id", "label": "step_run_id", "field": "step_run_id"},
                 {"name": "name", "label": "name", "field": "name", "sortable": True},
+                {
+                    "name": "status",
+                    "label": "status",
+                    "field": "status",
+                    "sortable": True,
+                },
                 {
                     "name": "run_time",
                     "label": "run_time",
@@ -55,7 +64,9 @@ def create_runs_view(data_store: DataStore):
             rows = [
                 {
                     "run_id": run_data["run_id"],
+                    "step_run_id": run_data["step_run_id"],
                     "name": run_data["step_name"],
+                    "status": run_data["status"],
                     "run_time": run_data["run_time"],
                 }
                 for _, run_data in runs.items()
@@ -71,9 +82,19 @@ def create_runs_view(data_store: DataStore):
                     "descending": True,
                 },
             )
+            table.add_slot(
+                "body-cell-status",
+                """
+                <q-td key="status" :props="props">
+                    <q-badge :color="props.value === 'failed' ? 'red' : 'green'">
+                        {{ props.value }}
+                    </q-badge>
+                </q-td>
+                """,
+            )
 
             def on_row_click(event):
-                selected_run_index = event.args[-2]["run_id"]
+                selected_run_index = event.args[-2]["step_run_id"]
                 show_side_panel(run_data=runs[selected_run_index])
 
             table.on("rowClick", on_row_click)

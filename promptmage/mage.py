@@ -63,6 +63,7 @@ class PromptMage:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 logger.info(f"Running step: {name}...")
+                status = "running"
                 logger.info(f"Step input: {args}, {kwargs}")
                 sig = inspect.signature(func)
                 # Get the prompt from the backend if it exists.
@@ -98,8 +99,10 @@ class PromptMage:
                         kwargs[var_name] = value
                 try:
                     results = func(*args, **kwargs)
+                    status = "success"
                 except KeyError as e:
                     results = f"Error: {e}"
+                    status = "failed"
 
                 # Store input and output data
                 if self.data_store:
@@ -108,6 +111,7 @@ class PromptMage:
                         prompt=prompt if prompt_name else None,
                         input_data={k: v for k, v in kwargs.items() if k != "prompt"},
                         output_data=results,
+                        status=status,
                     )
                     self.data_store.store_data(run_data)
                 logger.info(f"Step output: {results}")

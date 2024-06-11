@@ -16,20 +16,26 @@ class RunData:
         prompt: Prompt,
         input_data: Dict,
         output_data: Dict,
-        run_id: str | None = None,
-        run_time: datetime = datetime.now(),
+        run_id: str = str(uuid.uuid4()),
+        step_run_id: str | None = None,
+        run_time: datetime | None = None,
+        status: str | None = None,
     ):
-        self.run_id = run_id if run_id else str(uuid.uuid4())
+        self.step_run_id = step_run_id if step_run_id else str(uuid.uuid4())
+        self.run_id = run_id
         self.step_name = step_name
-        self.run_time = run_time
+        self.run_time = run_time if run_time else str(datetime.now())
         self.prompt = prompt
         self.input_data = input_data
         self.output_data = output_data
+        self.status = status
 
     def __repr__(self) -> str:
         return (
             f"RunData(run_id={self.run_id}, "
+            f"step_run_id={self.step_run_id}, "
             f"step_name={self.step_name}, "
+            f"status={self.status}, "
             f"run_time={self.run_time}, "
             f"prompt={self.prompt}, "
             f"input_data={self.input_data}, "
@@ -43,7 +49,9 @@ class RunData:
             "input_data": self.input_data,
             "output_data": self.output_data,
             "run_id": self.run_id,
+            "step_run_id": self.step_run_id,
             "run_time": self.run_time,
+            "status": self.status,
         }
 
     @classmethod
@@ -54,5 +62,6 @@ class RunData:
             data["input_data"],
             data["output_data"],
             data["run_id"],
+            data["step_run_id"],
             data["run_time"],
         )
