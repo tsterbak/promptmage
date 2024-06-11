@@ -37,4 +37,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-promptmage = "promptmage.cli:serve"
+promptmage = "promptmage.cli:promptmage"

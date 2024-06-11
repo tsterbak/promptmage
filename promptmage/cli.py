@@ -1,23 +1,46 @@
 """This module contains the command line interface for the PromptMage package."""
 
+import json
 import click
 import uvicorn
 
 from promptmage.utils import get_flow
 from promptmage.api import PromptMageAPI
 from promptmage.frontend import PromptMageFrontend
+from promptmage.storage import SQLiteDataBackend, SQLitePromptBackend
+
+
+@click.group()
+def promptmage():
+    """Promptmage CLI"""
+    pass
 
 
 @click.command()
-@click.argument("file_path", type=click.Path(exists=True))
-@click.option(
-    "--host", default="0.0.0.0", help="The host IP to run the FastAPI server on."
+def version():
+    """Print the version of the PromptMage package."""
+    from promptmage import __version__
+
+    click.echo(f"PromptMage version: {__version__}")
+
+
+@click.command()
+@click.argument(
+    "file_path",
+    type=click.Path(
+        exists=True,
+    ),
 )
-@click.option(
-    "--port", default=8000, type=int, help="The port to run the FastAPI server on."
-)
-def serve(file_path, host, port):
-    """Serve a FastAPI application containing a PromptMage instance from the given file."""
+@click.option("--host", default="0.0.0.0", help="The host IP to run the server on.")
+@click.option("--port", default=8000, type=int, help="The port to run the server on.")
+def run(file_path: str, host: str, port: int):
+    """Serve the application containing a PromptMage instance from the given file.
+
+    Args:
+        file_path (str): The path to the file containing the PromptMage instance.
+        host (str): The host IP to run the FastAPI server on.
+        port (int): The port to run the FastAPI server on.
+    """
     # TODO: Implement a multi-flow approach
     current_flow = get_flow(file_path)
 
@@ -35,5 +58,50 @@ def serve(file_path, host, port):
     uvicorn.run(app, host=host, port=port)
 
 
+@click.command()
+@click.option("--runs", "runs", default=False, help="Export runs.", flag_value=True)
+@click.option(
+    "--prompts", "prompts", default=False, help="Export prompts.", flag_value=True
+)
+@click.option(
+    "--filename",
+    default="promptmage",
+    help="The name of the file to export the data to.",
+)
+def export(runs: bool = False, prompts: bool = False, filename: str = "promptmage"):
+    """Export the run data and prompts from the PromptMage instance to json.
+
+    Args:
+        runs (bool): Whether to export the run data.
+        prompts (bool): Whether to export the prompts.
+        filename (str): The name of the file to export the data to.
+    """
+    if runs:
+        click.echo("Exporting runs...")
+        data_store = SQLiteDataBackend()
+        run_data = data_store.get_all_data()
+
+        with open(f"{filename}_runs.json", "w") as f:
+            json.dump([run for run in run_data.values()], f)
+
+    if prompts:
+        click.echo("Exporting prompts...")
+        prompt_store = SQLitePromptBackend()
+        prompts = prompt_store.get_prompts()
+
+        with open(f"{filename}_prompts.json", "w") as f:
+            json.dump([prompt.to_dict() for prompt in prompts], f)
+
+    if not runs and not prompts:
+        click.echo("No data to export.")
+    else:
+        click.echo("Export complete.")
+
+
+promptmage.add_command(version)
+promptmage.add_command(run)
+promptmage.add_command(export)
+
+
 if __name__ == "__main__":
-    serve()
+    promptmage()
