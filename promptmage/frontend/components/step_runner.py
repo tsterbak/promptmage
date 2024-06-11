@@ -38,11 +38,13 @@ def create_function_runner(step: MageStep):
         expansion_tab.update()
 
     def set_prompt():
+        nonlocal prompt
         system_prompt_field.update()
         user_prompt_field.update()
         prompt.system = system_prompt_field.value
         prompt.user = user_prompt_field.value
         step.set_prompt(prompt)
+        prompt = step.get_prompt()
 
     def update_inputs():
         for name, field in input_fields.items():
