@@ -17,7 +17,7 @@ def create_prompts_view(prompt_store: PromptStore):
         # get prompt with highest version
         side_panel.clear()
         with side_panel:
-            ui.button("Hide", on_click=hide_side_panel).style(
+            ui.button(">>", on_click=hide_side_panel).style(
                 "margin: 20px; margin-bottom: 0px; margin-top: 100px;"
             )
             for prompt in sorted(prompts, key=lambda p: p.version, reverse=True):

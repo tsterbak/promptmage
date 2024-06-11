@@ -13,10 +13,12 @@ def create_runs_view(data_store: DataStore):
     def show_side_panel(run_data):
         side_panel.clear()
         with side_panel:
+            ui.button(">>", on_click=hide_side_panel).style(
+                "margin: 20px; margin-bottom: 0px; margin-top: 100px;"
+            )
             with ui.card().style(
-                "padding: 20px; margin-right: 20px; margin-top: 100px; margin-bottom: 20px; margin-left: 20px"
+                "padding: 20px; margin-right: 20px; margin-top: 20px; margin-bottom: 20px; margin-left: 20px"
             ):
-                ui.button("Hide", on_click=hide_side_panel)
                 # display run data
                 ui.label(f"Step Run ID: {run_data['step_run_id']}")
                 ui.label(f"Run ID: {run_data['run_id']}")
@@ -28,6 +30,10 @@ def create_runs_view(data_store: DataStore):
                 for key, value in run_data["input_data"].items():
                     ui.markdown(f"**{key}**: {value}")
                 ui.label(f"Output Data: {run_data['output_data']}")
+                with ui.row():
+                    ui.button(
+                        "Use in playground",
+                    )
         side_panel.style("transform:translateX(0%);")
         side_panel.update()
 
