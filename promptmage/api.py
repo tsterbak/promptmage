@@ -2,7 +2,9 @@
 
 import inspect
 import pkg_resources
+from loguru import logger
 from pathlib import Path
+from pydantic import BaseModel
 
 from fastapi import FastAPI, Path, Query
 from fastapi.staticfiles import StaticFiles
@@ -71,7 +73,9 @@ class PromptMageAPI:
             )  # Update the signature for FastAPI to recognize
 
             # Add the route to FastAPI
-            app.add_api_route(path, endpoint_func, methods=["GET"])
+            app.add_api_route(
+                path, endpoint_func, methods=["GET"], response_model=EndpointResponse
+            )
             step_list.append({"name": step_name, "path": path})
 
         # create an endpoint to run the full dependency graph of the flow
@@ -83,7 +87,9 @@ class PromptMageAPI:
         new_signature = signature.replace(parameters=params)
         endpoint_func = self.create_endpoint_function(run_function, new_signature)
         setattr(endpoint_func, "__signature__", new_signature)
-        app.add_api_route(path, endpoint_func, methods=["GET"])
+        app.add_api_route(
+            path, endpoint_func, methods=["GET"], response_model=EndpointResponse
+        )
 
         # add a route to list all available steps with their names and input variables
         @app.get("/api/steps")
@@ -130,7 +136,27 @@ class PromptMageAPI:
     def create_endpoint_function(self, func, params):
         # Define the endpoint function using dynamic parameters
         async def endpoint(*args, **kwargs):
-            # Directly pass the keyword arguments to the function
-            return func(*args, **kwargs)
+            try:
+                result = func(*args, **kwargs)
+                return EndpointResponse(
+                    name=f"{func.__name__}",
+                    status=200,
+                    message="Success",
+                    result=str(result),
+                )
+            except Exception as e:
+                logger.info(f"Failed to call {func.__name__}")
+                return EndpointResponse(
+                    name=f"{func.__name__}",
+                    status=500,
+                    message=f"Error when calling {func.__name__}: {e}",
+                )
 
         return endpoint
+
+
+class EndpointResponse(BaseModel):
+    name: str
+    status: int = 500
+    message: str = "Internal Server Error"
+    result: str | None = None
