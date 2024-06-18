@@ -18,9 +18,12 @@
 The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
 
 ## Philosophy
-- Prompts as first-class citizens
+- Integrate the prompt playground into your workflow for fast iteration
+- Prompts as first-class citizens with version control and collaboration features
+- Manual and automatic testing and validation of prompts
+- Easy sharing of results with domain experts and stakeholders
+- build-in, automatically created API with fastAPI for easy integration and deployment
 - Type-hint everything for automatic inference and validation magic
-- build-in, automatically created API with fastAPI for easy integration
 
 ## Getting Started
 
@@ -37,14 +40,12 @@ pip install promptmage
 To use promptmage, run the following command:
 
 ```bash
-promptmage <path-to-flow>
+promptmage run <path-to-flow>
 ```
 
-Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application.
+This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000`.
 
-## Roadmap
-
-Coming soon.
+Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application or workflow.
 
 
 ## Development

@@ -40,14 +40,12 @@ pip install promptmage
 To use promptmage, run the following command:
 
 ```bash
-promptmage <path-to-flow>
+promptmage run <path-to-flow>
 ```
 
-Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application.
+This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000`.
 
-## Roadmap
-
-Coming soon.
+Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application or workflow.
 
 
 ## Development
