@@ -53,11 +53,11 @@ class SQLitePromptBackend(StorageBackend):
             cursor.execute(
                 "INSERT INTO prompts VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    str(uuid.uuid4()),
+                    prompt.id,
                     prompt.name,
                     prompt.system,
                     prompt.user,
-                    prompt.version + 1,
+                    prompt.version,
                     ",".join(prompt.template_vars),
                 ),
             )

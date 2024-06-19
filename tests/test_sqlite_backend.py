@@ -18,7 +18,6 @@ def test_init_backend():
 def test_store_prompt(prompt_sqlite_backend):
     """Test that a prompt is stored correctly."""
     prompt = Prompt(
-        id="test",
         name="test",
         system="test",
         user="test",
@@ -46,7 +45,6 @@ def test_store_prompt(prompt_sqlite_backend):
 def test_get_prompt(prompt_sqlite_backend):
     """Test that a prompt is retrieved correctly."""
     prompt = Prompt(
-        id="test",
         name="test",
         system="test",
         user="test",
@@ -68,7 +66,6 @@ def test_get_prompt(prompt_sqlite_backend):
 def test_get_prompts(prompt_sqlite_backend):
     """Test that all prompts are retrieved correctly."""
     prompt1 = Prompt(
-        id="test1",
         name="test1",
         system="test1",
         user="test1",
@@ -76,7 +73,6 @@ def test_get_prompts(prompt_sqlite_backend):
         template_vars=["test1"],
     )
     prompt2 = Prompt(
-        id="test2",
         name="test2",
         system="test2",
         user="test2",
@@ -113,12 +109,11 @@ def test_store_run_data(data_sqlite_backend):
             user="test",
             version=1,
             template_vars=["test"],
-            id="test",
         ),
         step_name="test",
-        run_time="test",
         input_data={"test": "test"},
         output_data={"test": "test"},
+        status="test",
     )
 
     data_sqlite_backend.store_data(run_data)
@@ -129,7 +124,7 @@ def test_store_run_data(data_sqlite_backend):
     cursor.execute("SELECT * FROM data WHERE run_id=?", (run_data.run_id,))
     row = cursor.fetchone()
 
-    assert row[0] == run_data.run_id
+    assert row[0] == run_data.step_run_id
     assert row[1] == run_data.run_time
     assert row[2] == run_data.step_name
 
