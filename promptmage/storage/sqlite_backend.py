@@ -163,10 +163,10 @@ class SQLiteDataBackend(StorageBackend):
             )
             conn.commit()
 
-    def get_data(self, run_id: str) -> RunData:
+    def get_data(self, step_run_id: str) -> RunData:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM data WHERE run_id=?", (run_id,))
+            cursor.execute("SELECT * FROM data WHERE step_run_id=?", (step_run_id,))
             row = cursor.fetchone()
             if row is None:
                 return None

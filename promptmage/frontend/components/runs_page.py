@@ -1,6 +1,6 @@
 from promptmage.storage.data_store import DataStore
 
-from nicegui import ui
+from nicegui import ui, app
 
 
 def create_runs_view(data_store: DataStore):
@@ -8,6 +8,10 @@ def create_runs_view(data_store: DataStore):
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
+
+    def use_run_in_playground(step_run_id):
+        app.storage.user["step_run_id"] = step_run_id
+        ui.navigate.to("/")
 
     # Function to show the side panel with detailed information
     def show_side_panel(run_data):
@@ -33,6 +37,7 @@ def create_runs_view(data_store: DataStore):
                 with ui.row():
                     ui.button(
                         "Use in playground",
+                        on_click=lambda: use_run_in_playground(run_data["step_run_id"]),
                     )
         side_panel.style("transform:translateX(0%);")
         side_panel.update()

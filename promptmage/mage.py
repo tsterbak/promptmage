@@ -121,6 +121,7 @@ class PromptMage:
                 name=name,
                 func=wrapper,
                 prompt_store=self.prompt_store,
+                data_store=self.data_store,
                 prompt_name=prompt_name,
                 depends_on=depends_on,
             )
@@ -222,6 +223,7 @@ class MageStep:
         name: str,
         func: Callable,
         prompt_store: PromptStore,
+        data_store: DataStore,
         prompt_name: str | None = None,
         depends_on: str | None = None,
     ):
@@ -230,6 +232,7 @@ class MageStep:
         self.func = func
         self.signature = inspect.signature(func)
         self.prompt_store = prompt_store
+        self.data_store = data_store
         self.prompt_name = prompt_name
         self.depends_on = depends_on
 

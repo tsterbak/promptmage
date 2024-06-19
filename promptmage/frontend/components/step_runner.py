@@ -1,6 +1,6 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
-from nicegui import ui, run
+from nicegui import ui, run, app
 from loguru import logger
 
 from promptmage.mage import MageStep
@@ -21,10 +21,22 @@ def create_function_runner(step: MageStep):
         .classes("w-full")
         .style("width: 650px;")
     )
+    # load prompt if available
     if step.prompt_name:
         prompt = step.get_prompt()
     else:
         prompt = None
+
+    # run id given in app.storage, initialize with this data
+    if app.storage.user.get("step_run_id"):
+        step_run_id = app.storage.user.get("step_run_id")
+        run_data = step.data_store.get_data(step_run_id)
+        prompt = run_data.prompt
+        step.input_values = run_data.input_data
+        step.result = run_data.output_data
+        expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
+        expansion_tab.update()
+        del app.storage.user["step_run_id"]
 
     async def run_function():
         expansion_tab.props("icon=run_circle")
