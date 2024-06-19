@@ -216,6 +216,13 @@ class PromptMage:
     def __repr__(self) -> str:
         return f"PromptMage(name={self.name}, steps={list(self.steps.keys())})"
 
+    def get_run_data(self) -> Dict:
+        if self.data_store:
+            runs = self.data_store.get_all_data()
+            # filter by step_name
+            return {k: v for k, v in runs.items() if v.get("step_name") in self.steps}
+        return {}
+
 
 class MageStep:
     def __init__(

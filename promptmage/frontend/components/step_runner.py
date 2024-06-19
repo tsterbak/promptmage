@@ -31,12 +31,13 @@ def create_function_runner(step: MageStep):
     if app.storage.user.get("step_run_id"):
         step_run_id = app.storage.user.get("step_run_id")
         run_data = step.data_store.get_data(step_run_id)
-        prompt = run_data.prompt
-        step.input_values = run_data.input_data
-        step.result = run_data.output_data
-        expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
-        expansion_tab.update()
-        del app.storage.user["step_run_id"]
+        if run_data.step_name == step.name:
+            prompt = run_data.prompt
+            step.input_values = run_data.input_data
+            step.result = run_data.output_data
+            expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
+            expansion_tab.update()
+            del app.storage.user["step_run_id"]
 
     async def run_function():
         expansion_tab.props("icon=run_circle")

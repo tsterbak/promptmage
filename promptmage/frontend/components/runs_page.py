@@ -1,9 +1,8 @@
-from promptmage.storage.data_store import DataStore
-
+from promptmage import PromptMage
 from nicegui import ui, app
 
 
-def create_runs_view(data_store: DataStore):
+def create_runs_view(mage: PromptMage):
 
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
@@ -50,7 +49,9 @@ def create_runs_view(data_store: DataStore):
 
     def build_ui():
         ui.label("Runs").classes("text-2xl")
-        runs = data_store.get_all_data()
+        runs = mage.get_run_data()
+        # TODO: filter runs to runs relevant to the current flow
+
         # Main UI setup
         with ui.card().style("padding: 20px"):
             # Create a table with clickable rows

@@ -40,7 +40,7 @@ class PromptMageFrontend:
         @ui.page("/runs", title="PromptMage - Runs")
         def runs_page():
             with theme.frame("Runs"):
-                create_runs_view(self.mage.data_store)()
+                create_runs_view(self.mage)()
 
         @ui.page("/prompts", title="PromptMage - Prompts")
         def prompts_page():
