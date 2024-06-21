@@ -45,7 +45,7 @@ class PromptMageFrontend:
         @ui.page("/prompts", title="PromptMage - Prompts")
         def prompts_page():
             with theme.frame("Prompts"):
-                create_prompts_view(self.mage.prompt_store)()
+                create_prompts_view(self.mage)()
 
         ui.run_with(
             fastapi_app,

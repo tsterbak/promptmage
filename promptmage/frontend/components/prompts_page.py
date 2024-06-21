@@ -1,12 +1,13 @@
 from nicegui import ui
+from loguru import logger
 from collections import defaultdict
 from typing import List
 
-from promptmage.storage.prompt_store import PromptStore
+from promptmage import PromptMage
 from promptmage.prompt import Prompt
 
 
-def create_prompts_view(prompt_store: PromptStore):
+def create_prompts_view(mage: PromptMage):
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
@@ -32,15 +33,11 @@ def create_prompts_view(prompt_store: PromptStore):
                     with ui.row():
                         ui.button(
                             "Use Prompt",
-                            on_click=lambda prompt_id=prompt.id: prompt_store.use_prompt(
-                                prompt_id
-                            ),
+                            on_click=lambda prompt_id=prompt.id: use_prompt(prompt_id),
                         )
                         ui.button(
                             "Edit Prompt",
-                            on_click=lambda prompt_id=prompt.id: prompt_store.edit_prompt(
-                                prompt_id
-                            ),
+                            on_click=lambda prompt_id=prompt.id: edit_prompt(prompt_id),
                         )
                         ui.button(
                             "Delete Prompt",
@@ -52,7 +49,13 @@ def create_prompts_view(prompt_store: PromptStore):
         side_panel.update()
 
     def delete_prompt(prompt_id):
-        prompt_store.delete_prompt(prompt_id)
+        mage.prompt_store.delete_prompt(prompt_id)
+
+    def edit_prompt(prompt_id):
+        logger.info(f"Editing prompt with ID: {prompt_id}. Not implemented yet.")
+
+    def use_prompt(prompt_id):
+        logger.info(f"Using prompt with ID: {prompt_id}. Not implemented yet.")
 
     # Function to hide the side panel
     def hide_side_panel():
@@ -62,11 +65,12 @@ def create_prompts_view(prompt_store: PromptStore):
 
     def build_ui():
         ui.label("Prompts").classes("text-2xl")
-        all_prompts = prompt_store.get_prompts()
+        all_prompts = mage.prompt_store.get_prompts()
         # group them by name
         prompts = defaultdict(list)
         for prompt in all_prompts:
-            prompts[prompt.name].append(prompt)
+            if prompt.name in [step.prompt_name for step in mage.steps.values()]:
+                prompts[prompt.name].append(prompt)
 
         # Main UI setup
         with ui.card().style("padding: 20px"):

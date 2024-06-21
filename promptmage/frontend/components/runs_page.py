@@ -50,7 +50,6 @@ def create_runs_view(mage: PromptMage):
     def build_ui():
         ui.label("Runs").classes("text-2xl")
         runs = mage.get_run_data()
-        # TODO: filter runs to runs relevant to the current flow
 
         # Main UI setup
         with ui.card().style("padding: 20px"):

@@ -10,12 +10,14 @@ def frame(navigation_title: str):
     ui.colors(
         primary="#6E93D6", secondary="#53B689", accent="#111B1E", positive="#53B689"
     )
-    with ui.header():
-        ui.avatar("img:/static/promptmage-logo.png", size=128)
+    with ui.header(elevated=True):
+        with ui.link("/"):
+            ui.avatar("img:/static/promptmage-logo.png", size="5em")
+        # ui.image("/static/promptmage-logo.png").classes("w-16")
         ui.space()
-        ui.label(navigation_title)
-        ui.space()
-        with ui.row():
+        with ui.column():
+            ui.label(navigation_title).style("font-size: 1.5em;")
             menu()
+        ui.space()
     with ui.column():  # .classes("absolute-center items-center"):
         yield
