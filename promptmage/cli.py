@@ -33,13 +33,20 @@ def version():
 )
 @click.option("--host", default="0.0.0.0", help="The host IP to run the server on.")
 @click.option("--port", default=8000, type=int, help="The port to run the server on.")
-def run(file_path: str, host: str, port: int):
+@click.option(
+    "--browser",
+    is_flag=True,
+    help="Open the browser after starting the server.",
+    default=False,
+)
+def run(file_path: str, host: str, port: int, browser: bool):
     """Serve the application containing a PromptMage instance from the given file.
 
     Args:
         file_path (str): The path to the file containing the PromptMage instance.
         host (str): The host IP to run the FastAPI server on.
         port (int): The port to run the FastAPI server on.
+        browser (bool): Whether to open the browser after starting the server.
     """
     # TODO: Implement a multi-flow approach
     current_flow = get_flow(file_path)
@@ -55,7 +62,12 @@ def run(file_path: str, host: str, port: int):
     frontend.init_from_api(app)
 
     # Run the applications
-    uvicorn.run(app, host=host, port=port)
+    if browser:
+        import webbrowser
+
+        url = f"http://localhost:{port}"
+        webbrowser.open_new_tab(url)
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 
 @click.command()
