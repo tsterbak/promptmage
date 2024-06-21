@@ -23,20 +23,20 @@ def create_runs_view(mage: PromptMage):
                 "padding: 20px; margin-right: 20px; margin-top: 20px; margin-bottom: 20px; margin-left: 20px"
             ):
                 # display run data
-                ui.label(f"Step Run ID: {run_data['step_run_id']}")
-                ui.label(f"Run ID: {run_data['run_id']}")
-                ui.label(f"Step Name: {run_data['step_name']}")
-                ui.label(f"Status: {run_data['status']}")
-                ui.label(f"Run Time: {run_data['run_time']}")
-                ui.label(f"Prompt: {run_data['prompt']}")
+                ui.label(f"Step Run ID: {run_data.step_run_id}")
+                ui.label(f"Run ID: {run_data.run_id}")
+                ui.label(f"Step Name: {run_data.step_name}")
+                ui.label(f"Status: {run_data.status}")
+                ui.label(f"Run Time: {run_data.run_time}")
+                ui.label(f"Prompt: {run_data.prompt}")
                 ui.label("Input Data:")
-                for key, value in run_data["input_data"].items():
+                for key, value in run_data.input_data.items():
                     ui.markdown(f"**{key}**: {value}")
-                ui.label(f"Output Data: {run_data['output_data']}")
+                ui.label(f"Output Data: {run_data.output_data}")
                 with ui.row():
                     ui.button(
                         "Use in playground",
-                        on_click=lambda: use_run_in_playground(run_data["step_run_id"]),
+                        on_click=lambda: use_run_in_playground(run_data.step_run_id),
                     )
         side_panel.style("transform:translateX(0%);")
         side_panel.update()
@@ -75,13 +75,13 @@ def create_runs_view(mage: PromptMage):
 
             rows = [
                 {
-                    "run_id": run_data["run_id"],
-                    "step_run_id": run_data["step_run_id"],
-                    "name": run_data["step_name"],
-                    "status": run_data["status"],
-                    "run_time": run_data["run_time"],
+                    "run_id": run_data.run_id,
+                    "step_run_id": run_data.step_run_id,
+                    "name": run_data.step_name,
+                    "status": run_data.status,
+                    "run_time": run_data.run_time,
                 }
-                for _, run_data in runs.items()
+                for run_data in runs
             ]
 
             table = ui.table(
@@ -107,7 +107,11 @@ def create_runs_view(mage: PromptMage):
 
             def on_row_click(event):
                 selected_run_index = event.args[-2]["step_run_id"]
-                show_side_panel(run_data=runs[selected_run_index])
+                show_side_panel(
+                    run_data=[r for r in runs if r.step_run_id == selected_run_index][
+                        -1
+                    ]
+                )
 
             table.on("rowClick", on_row_click)
 

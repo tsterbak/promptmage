@@ -181,14 +181,14 @@ class SQLiteDataBackend(StorageBackend):
                 output_data=json.loads(row[7]),
             )
 
-    def get_all_data(self) -> Dict[str, RunData]:
+    def get_all_data(self) -> List[RunData]:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM data")
             rows = cursor.fetchall()
-            run_data = {}
+            run_data = []
             for row in rows:
-                run_data[row[0]] = RunData(
+                r = RunData(
                     step_run_id=row[0],
                     run_time=row[1],
                     step_name=row[2],
@@ -197,6 +197,7 @@ class SQLiteDataBackend(StorageBackend):
                     prompt=Prompt.from_dict(json.loads(row[5])) if row[5] else None,
                     input_data=json.loads(row[6]),
                     output_data=json.loads(row[7]),
-                ).to_dict()
+                )
+                run_data.append(r)
 
             return run_data
