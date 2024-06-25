@@ -3,6 +3,7 @@
 import json
 import click
 import uvicorn
+from pathlib import Path
 
 from promptmage.utils import get_flow
 from promptmage.api import PromptMageAPI
@@ -48,6 +49,10 @@ def run(file_path: str, host: str, port: int, browser: bool):
         port (int): The port to run the FastAPI server on.
         browser (bool): Whether to open the browser after starting the server.
     """
+    # create the .promptmage directory to store all the data
+    dirPath = Path(".promptmage")
+    dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+
     # TODO: Implement a multi-flow approach
     current_flow = get_flow(file_path)
 

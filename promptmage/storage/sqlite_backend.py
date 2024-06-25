@@ -2,9 +2,9 @@
 
 import sqlite3
 import json
-import uuid
 from loguru import logger
-from typing import List, Dict
+from pathlib import Path
+from typing import List
 
 from promptmage.prompt import Prompt
 from promptmage.exceptions import PromptNotFoundException
@@ -13,10 +13,14 @@ from promptmage.storage.storage_backend import StorageBackend
 
 
 class SQLitePromptBackend(StorageBackend):
-    """A class that stores the prompts in a SQLite database."""
+    """A class that stores the prompts in a SQLite database.
 
-    def __init__(self, db_path: str = "promptmage.db"):
-        self.db_path = db_path
+    Attributes:
+        db_path (str): The path to the SQLite database. Defaults to ".promptmage/promptmage.db".
+    """
+
+    def __init__(self, db_path: str | None = None):
+        self.db_path = db_path if db_path else ".promptmage/promptmage.db"
         self._init_db()
         self._create_table()
 
@@ -110,10 +114,14 @@ class SQLitePromptBackend(StorageBackend):
 
 
 class SQLiteDataBackend(StorageBackend):
-    """A class that stores the data in a SQLite database."""
+    """A class that stores the data in a SQLite database.
 
-    def __init__(self, db_path: str = "promptmage.db"):
-        self.db_path = db_path
+    Attributes:
+        db_path (str): The path to the SQLite database. Defaults to ".promptmage/promptmage.db".
+    """
+
+    def __init__(self, db_path: str | None = None):
+        self.db_path = db_path if db_path else ".promptmage/promptmage.db"
         self._init_db()
         self._create_table()
 
