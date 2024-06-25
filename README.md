@@ -48,6 +48,11 @@ This will start the promptmage server and run the flow at the given path. You ca
 Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application or workflow.
 
 
+## Use with Docker
+
+You can find an usage example with docker here: [Docker example](https://github.com/tsterbak/promptmage/tree/main/examples/docker).
+
+
 ## Development
 
 To develop PromptMage, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
