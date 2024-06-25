@@ -112,14 +112,18 @@ def create_function_runner(step: MageStep):
                                         if prompt
                                         else "No prompt supported"
                                     )
-                                ).style("flex-grow: 1; overflow: auto;")
+                                ).style(
+                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
+                                )
                             with ui.row():
                                 ui.label("User:").style("width: 100px;")
                                 user_prompt_field = ui.textarea(
                                     value=(
                                         prompt.user if prompt else "No prompt supported"
                                     )
-                                ).style("flex-grow: 1; overflow: auto;")
+                                ).style(
+                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
+                                )
 
                     with ui.row():
                         ui.button("Run", on_click=run_function).style(

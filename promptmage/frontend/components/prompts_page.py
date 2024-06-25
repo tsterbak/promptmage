@@ -13,7 +13,7 @@ def create_prompts_view(mage: PromptMage):
     )
 
     # prompt editing dialog
-    dialog = ui.dialog()
+    dialog = ui.dialog().props("full-width")
 
     # Function to show the side panel with detailed information
     def show_side_panel(prompts: List[Prompt]):
@@ -59,13 +59,19 @@ def create_prompts_view(mage: PromptMage):
         logger.info(f"Editing prompt with ID: {prompt_id}.")
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
         dialog.clear()
-        with dialog, ui.card().classes("w-256 h-512"):
+        with dialog, ui.card():
             ui.label("Edit prompt").classes("text-2xl")
-            ui.label(f"Prompt ID: {prompt_id}")
-            ui.label(f"Name: {prompt.name}")
-            ui.label(f"Version: {prompt.version}")
-            system_prompt = ui.textarea(value=prompt.system, label="System prompt")
-            user_prompt = ui.textarea(value=prompt.user, label="User prompt")
+            with ui.row():
+                ui.label(f"Name: {prompt.name}")
+                ui.label(f"Version: {prompt.version}")
+                ui.label(f"Prompt ID: {prompt_id}")
+            with ui.row():
+                system_prompt = ui.textarea(
+                    value=prompt.system, label="System prompt"
+                ).style("width: 500px; height: 200px;")
+                user_prompt = ui.textarea(value=prompt.user, label="User prompt").style(
+                    "width: 500px; height: 200px;"
+                )
             with ui.row():
                 ui.button(
                     "Save",

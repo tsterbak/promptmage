@@ -30,7 +30,7 @@ def create_main_runner(mage: PromptMage):
                     with ui.row():
                         ui.label(f"{param.name}:").style("width: 100px;")
                         input_fields[param.name] = ui.textarea().style(
-                            "flex-grow: 2; overflow: auto;"
+                            "flex-grow: 2; overflow: auto; width: 500px; height: 200px;"
                         )
 
             ui.button("Run", on_click=run_function).style("margin-top: 10px;")
