@@ -67,6 +67,33 @@ class SQLitePromptBackend(StorageBackend):
             )
             conn.commit()
 
+    def update_prompt(self, prompt: Prompt):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            # get the latest version number of the prompt
+            cursor.execute("SELECT * FROM prompts WHERE name=?", (prompt.name,))
+            rows = cursor.fetchall()
+            if len(rows) == 0:
+                raise PromptNotFoundException(
+                    f"Prompt with name {prompt.name} not found."
+                )
+            # select the latest version
+            row = sorted(rows, key=lambda row: row[4], reverse=True)[0]
+
+            # run the update
+            cursor.execute(
+                "UPDATE prompts SET version=?, name=?, system=?, user=?, template_vars=? WHERE id=?",
+                (
+                    row[4] + 1,
+                    prompt.name,
+                    prompt.system,
+                    prompt.user,
+                    ",".join(prompt.template_vars),
+                    prompt.id,
+                ),
+            )
+            conn.commit()
+
     def get_prompt(self, prompt_name: str) -> Prompt:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -78,6 +105,22 @@ class SQLitePromptBackend(StorageBackend):
                 )
             # select the latest version
             row = sorted(rows, key=lambda row: row[4], reverse=True)[0]
+            return Prompt(
+                id=row[0],
+                name=row[1],
+                system=row[2],
+                user=row[3],
+                version=row[4],
+                template_vars=row[5].split(","),
+            )
+
+    def get_prompt_by_id(self, prompt_id: str) -> Prompt:
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM prompts WHERE id=?", (prompt_id,))
+            row = cursor.fetchone()
+            if row is None:
+                raise PromptNotFoundException(f"Prompt with ID {prompt_id} not found.")
             return Prompt(
                 id=row[0],
                 name=row[1],

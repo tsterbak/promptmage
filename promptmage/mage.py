@@ -278,6 +278,8 @@ class MageStep:
         return self.prompt_store.get_prompt(self.prompt_name)
 
     def set_prompt(self, prompt: Prompt):
+        prompt.id = str(uuid.uuid4())
+        prompt.version = prompt.version + 1
         self.prompt_store.store_prompt(prompt)
 
     def on_input_change(self, callback):

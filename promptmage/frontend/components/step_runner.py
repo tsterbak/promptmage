@@ -56,7 +56,6 @@ def create_function_runner(step: MageStep):
         user_prompt_field.update()
         prompt.system = system_prompt_field.value
         prompt.user = user_prompt_field.value
-        prompt.version += 1
         step.set_prompt(prompt)
 
     def update_inputs():

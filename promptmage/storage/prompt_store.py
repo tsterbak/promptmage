@@ -19,23 +19,27 @@ class PromptStore:
         logger.info(f"Storing prompt: {prompt}")
         self.backend.store_prompt(prompt)
 
-    def get_prompt(self, prompt_id: str) -> Prompt:
+    def get_prompt(self, prompt_name: str) -> Prompt:
         """Retrieve a prompt from the backend."""
-        logger.info(f"Retrieving prompt with ID: {prompt_id}")
+        logger.info(f"Retrieving prompt with name: {prompt_name}")
         try:
-            return self.backend.get_prompt(prompt_id)
+            return self.backend.get_prompt(prompt_name)
         except PromptNotFoundException:
             logger.error(
-                f"Prompt with ID {prompt_id} not found, returning an empty prompt."
+                f"Prompt with ID {prompt_name} not found, returning an empty prompt."
             )
             # return an empty prompt if the prompt is not found
             return Prompt(
-                name=prompt_id,
+                name=prompt_name,
                 version=1,
                 system="You are a helpful assistant.",
                 user="",
                 template_vars=[],
             )
+
+    def get_prompt_by_id(self, prompt_id: str) -> Prompt:
+        logger.info(f"Retrieving prompt with ID {prompt_id}")
+        return self.backend.get_prompt_by_id(prompt_id)
 
     def get_prompts(self) -> List[Prompt]:
         """Retrieve all prompts from the backend."""
@@ -45,3 +49,8 @@ class PromptStore:
         """Delete a prompt from the backend."""
         logger.info(f"Deleting prompt with ID: {prompt_id}")
         self.backend.delete_prompt(prompt_id)
+
+    def update_prompt(self, prompt: Prompt):
+        """Update the prompt by id."""
+        logger.info(f"Update prompt: {prompt}")
+        self.backend.update_prompt(prompt)

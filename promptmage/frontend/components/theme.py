@@ -12,12 +12,11 @@ def frame(navigation_title: str):
     )
     with ui.header(elevated=True):
         with ui.link("/"):
-            ui.avatar("img:/static/promptmage-logo.png", size="5em")
+            ui.avatar("img:/static/promptmage-logo.png")
         # ui.image("/static/promptmage-logo.png").classes("w-16")
         ui.space()
-        with ui.column():
-            ui.label(navigation_title).style("font-size: 1.5em;")
-            menu()
+        ui.label(navigation_title).style("font-size: 1.5em;")
         ui.space()
+        menu()
     with ui.column():  # .classes("absolute-center items-center"):
         yield

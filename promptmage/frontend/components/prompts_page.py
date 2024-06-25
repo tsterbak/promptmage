@@ -12,6 +12,9 @@ def create_prompts_view(mage: PromptMage):
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
 
+    # prompt editing dialog
+    dialog = ui.dialog()
+
     # Function to show the side panel with detailed information
     def show_side_panel(prompts: List[Prompt]):
         # get prompt with highest version
@@ -49,13 +52,40 @@ def create_prompts_view(mage: PromptMage):
         side_panel.update()
 
     def delete_prompt(prompt_id):
+        logger.info(f"Deleting prompt with ID: {prompt_id}.")
         mage.prompt_store.delete_prompt(prompt_id)
 
     def edit_prompt(prompt_id):
-        logger.info(f"Editing prompt with ID: {prompt_id}. Not implemented yet.")
+        logger.info(f"Editing prompt with ID: {prompt_id}.")
+        prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
+        dialog.clear()
+        with dialog, ui.card().classes("w-256 h-512"):
+            ui.label("Edit prompt").classes("text-2xl")
+            ui.label(f"Prompt ID: {prompt_id}")
+            ui.label(f"Name: {prompt.name}")
+            ui.label(f"Version: {prompt.version}")
+            system_prompt = ui.textarea(value=prompt.system, label="System prompt")
+            user_prompt = ui.textarea(value=prompt.user, label="User prompt")
+            with ui.row():
+                ui.button(
+                    "Save",
+                    on_click=lambda: save_prompt(
+                        prompt_id, system_prompt.value, user_prompt.value
+                    ),
+                )
+                ui.button("Cancel", on_click=dialog.close)
+
+        dialog.open()
 
     def use_prompt(prompt_id):
         logger.info(f"Using prompt with ID: {prompt_id}. Not implemented yet.")
+
+    def save_prompt(prompt_id: str, system: str, user: str):
+        prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
+        prompt.system = system
+        prompt.user = user
+        mage.prompt_store.update_prompt(prompt)
+        dialog.close()
 
     # Function to hide the side panel
     def hide_side_panel():
