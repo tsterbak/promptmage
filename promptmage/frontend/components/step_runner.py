@@ -146,7 +146,16 @@ def create_function_runner(step: MageStep):
                             "margin-top: 10px; margin-left: 10px;"
                         )
                     ui.separator()
-                    ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
+                    with ui.row():
+                        ui.label("Result:").style(
+                            "margin-top: 20px; font-weight: bold;"
+                        )
+                        ui.button(
+                            icon="content_copy",
+                            on_click=lambda: ui.clipboard.write(
+                                step.result or "No result available"
+                            ),
+                        ).props("fab")
                     result_field = ui.markdown(
                         f"{step.result}" if step.result else ""
                     ).style("margin-top: 20px; color: blue; height: 200px;")

@@ -35,7 +35,12 @@ def create_main_runner(mage: PromptMage):
 
             ui.button("Run", on_click=run_function).style("margin-top: 10px;")
             ui.separator()
-            ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
+            with ui.row():
+                ui.button(
+                    icon="content_copy",
+                    on_click=lambda: ui.clipboard.write(result_field.content),
+                ).props("fab")
+                ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
             result_field = ui.markdown("").style(
                 "margin-top: 20px; color: blue; height: 200px; overflow-y: auto;"
             )
