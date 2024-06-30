@@ -1,6 +1,7 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 from nicegui import ui, run, app
+from loguru import logger
 
 from promptmage.mage import MageStep
 
@@ -14,6 +15,7 @@ def create_function_runner(step: MageStep):
     input_fields = {}
     system_prompt_field = None
     user_prompt_field = None
+    model_select = None
     result_field = None
     expansion_tab = (
         ui.expansion(f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}")
@@ -45,6 +47,9 @@ def create_function_runner(step: MageStep):
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
+        if model_select:
+            logger.info(f"Selected model: {model_select.value}")
+            step.model = model_select.value
         result = await run.io_bound(step.execute, **inputs)
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
@@ -75,7 +80,7 @@ def create_function_runner(step: MageStep):
     step.on_output_change(update_results)
 
     def build_ui():
-        nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab
+        nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab, model_select
         with expansion_tab:
             with ui.card():
                 ui.label(f"{step.name} - {step.step_id}")
@@ -85,13 +90,22 @@ def create_function_runner(step: MageStep):
                     ui.label("Step Runner").style(
                         "font-weight: bold; font-size: 1.5em;"
                     )
+                    # show available models if available
+                    if step.available_models:
+                        with ui.row():
+                            ui.label("Select model:").style("margin-top: 20px;")
+                            model_select = ui.select(
+                                step.available_models,
+                                label="Select model",
+                                value=step.model,
+                            )
                     with ui.row():
                         ui.label("Inputs:").style(
                             "margin-top: 20px; font-weight: bold;"
                         )
                         with ui.column().style("flex-grow: 1; margin-top: 20px;"):
                             for param in step.signature.parameters.values():
-                                if param.name != "prompt":
+                                if param.name not in ["prompt", "model"]:
                                     with ui.row():
                                         ui.label(f"{param.name}:").style(
                                             "width: 100px;"

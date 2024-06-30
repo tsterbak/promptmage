@@ -26,7 +26,7 @@ def create_main_runner(mage: PromptMage):
             ui.label("Flow Runner").style("font-weight: bold; font-size: 1.5em;")
             ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
             for param in inspect.signature(flow_func).parameters.values():
-                if param.name != "prompt":
+                if param.name not in ["prompt", "model"]:
                     with ui.row():
                         ui.label(f"{param.name}:").style("width: 100px;")
                         input_fields[param.name] = ui.textarea().style(

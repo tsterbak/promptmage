@@ -20,6 +20,7 @@ class RunData:
         step_run_id: str | None = None,
         run_time: datetime | None = None,
         status: str | None = None,
+        model: str | None = None,
     ):
         self.step_run_id = step_run_id if step_run_id else str(uuid.uuid4())
         self.run_id = run_id
@@ -29,6 +30,7 @@ class RunData:
         self.input_data = input_data
         self.output_data = output_data
         self.status = status
+        self.model = model
 
     def __repr__(self) -> str:
         return (
@@ -39,7 +41,8 @@ class RunData:
             f"run_time={self.run_time}, "
             f"prompt={self.prompt}, "
             f"input_data={self.input_data}, "
-            f"output_data={self.output_data})"
+            f"output_data={self.output_data}, "
+            f"model={self.model})"
         )
 
     def to_dict(self) -> Dict:

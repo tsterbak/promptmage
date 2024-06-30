@@ -42,7 +42,10 @@ data_store = DataStore(backend=SQLiteDataBackend())
 
 # Create a new PromptMage instance
 mage = PromptMage(
-    name="fact-extraction", prompt_store=prompt_store, data_store=data_store
+    name="fact-extraction",
+    prompt_store=prompt_store,
+    data_store=data_store,
+    available_models=["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
 )
 
 
@@ -50,10 +53,10 @@ mage = PromptMage(
 
 
 @mage.step(name="extract", prompt_name="extract_facts", depends_on=None)
-def extract_facts(article: str, prompt: Prompt) -> str:
+def extract_facts(article: str, prompt: Prompt, model: str = "gpt-3.5-turbo") -> str:
     """Extract the facts as a bullet list from an article."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",  # "llama3:instruct",
+        model=model,  # "llama3:instruct",
         messages=[
             {"role": "system", "content": prompt.system},
             {
@@ -69,7 +72,7 @@ def extract_facts(article: str, prompt: Prompt) -> str:
 def summarize_facts(facts: str, prompt: Prompt) -> str:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",  # "llama3:instruct",
+        model="gpt-3.5-turbo",  # "llama3:instruct",
         messages=[
             {"role": "system", "content": prompt.system},
             {

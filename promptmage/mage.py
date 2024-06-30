@@ -27,10 +27,12 @@ class PromptMage:
         name: str,
         prompt_store: PromptStore | None = None,
         data_store: DataStore | None = None,
+        available_models: List[str] | None = None,
     ):
         self.name: str = name
         self.prompt_store = prompt_store
         self.data_store = data_store
+        self.available_models = available_models
         self.steps: Dict = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
@@ -66,13 +68,16 @@ class PromptMage:
                 status = "running"
                 logger.info(f"Step input: {args}, {kwargs}")
                 sig = inspect.signature(func)
+
                 # Get the prompt from the backend if it exists.
                 if prompt_name is not None:
                     prompt = self.prompt_store.get_prompt(prompt_name)
                     # extract the template variables from the function signature
                     if prompt.template_vars == []:
                         prompt.template_vars = [
-                            param for param in sig.parameters if param != "prompt"
+                            param
+                            for param in sig.parameters
+                            if param not in ["prompt", "model"]
                         ]
                         # Store the updated prompt
                         self.prompt_store.store_prompt(prompt)
@@ -109,14 +114,20 @@ class PromptMage:
                     run_data = RunData(
                         step_name=name,
                         prompt=prompt if prompt_name else None,
-                        input_data={k: v for k, v in kwargs.items() if k != "prompt"},
+                        input_data={
+                            k: v
+                            for k, v in kwargs.items()
+                            if k not in ["prompt", "model"]
+                        },
                         output_data=results,
                         status=status,
+                        model=kwargs.get("model", None),
                     )
                     self.data_store.store_data(run_data)
                 logger.info(f"Step output: {results}")
                 return results
 
+            func_params = inspect.signature(func).parameters
             self.steps[name] = MageStep(
                 name=name,
                 func=wrapper,
@@ -124,6 +135,14 @@ class PromptMage:
                 data_store=self.data_store,
                 prompt_name=prompt_name,
                 depends_on=depends_on,
+                available_models=(
+                    self.available_models if func_params.get("model") else None
+                ),
+                model=(
+                    func_params.get("model").default
+                    if func_params.get("model")
+                    else None
+                ),
             )
 
             # store the dependencies
@@ -233,6 +252,8 @@ class MageStep:
         data_store: DataStore,
         prompt_name: str | None = None,
         depends_on: str | None = None,
+        model: str | None = None,
+        available_models: List[str] | None = None,
     ):
         self.step_id = str(uuid.uuid4())
         self.name = name
@@ -242,6 +263,8 @@ class MageStep:
         self.data_store = data_store
         self.prompt_name = prompt_name
         self.depends_on = depends_on
+        self.model = model
+        self.available_models = available_models
 
         # store inputs and results
         self.input_values = {}
@@ -249,7 +272,7 @@ class MageStep:
 
         # Initialize input values with default parameter values
         for param in self.signature.parameters.values():
-            if param.name == "prompt":
+            if param.name in ["prompt", "model"]:
                 continue
             if param.default is not inspect.Parameter.empty:
                 self.input_values[param.name] = param.default
@@ -263,6 +286,8 @@ class MageStep:
     def execute(self, **inputs):
         for key, value in inputs.items():
             self.input_values[key] = value
+        if self.model:
+            self.input_values["model"] = self.model
         for callback in self._input_callbacks:
             callback()
         self.result = self.func(**self.input_values)
