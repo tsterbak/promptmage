@@ -1,5 +1,8 @@
-from promptmage import PromptMage
+from typing import List
+from loguru import logger
 from nicegui import ui, app
+
+from promptmage import PromptMage, RunData
 
 
 def create_runs_view(mage: PromptMage):
@@ -7,13 +10,15 @@ def create_runs_view(mage: PromptMage):
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
     )
+    # compare runs dialog
+    compare_dialog = ui.dialog().props("full-width")
 
     def use_run_in_playground(step_run_id):
         app.storage.user["step_run_id"] = step_run_id
         ui.navigate.to("/")
 
     # Function to show the side panel with detailed information
-    def show_side_panel(run_data):
+    def show_side_panel(run_data: RunData):
         side_panel.clear()
         with side_panel:
             ui.button(">>", on_click=hide_side_panel).style(
@@ -47,15 +52,82 @@ def create_runs_view(mage: PromptMage):
         side_panel.style("transform:translateX(100%);")
         side_panel.update()
 
+    # rating function
+    def rate_run(step_run_id, rating):
+        logger.info(f"Rating run {step_run_id} with {rating}")
+        ui.notify("Not implemented yet. Run rated successfully.")
+
     def build_ui():
         ui.label("Runs").classes("text-2xl")
-        runs = mage.get_run_data()
+        runs: List[RunData] = mage.get_run_data()
+
+        def display_comparison():
+            selected_runs = table.selected
+            if len(selected_runs) < 2:
+                ui.notify("Please select at least two runs to compare.")
+                return
+            if len(selected_runs) > 5:
+                ui.notify("Please select at most five runs to compare.")
+                return
+            status_success = all([r["status"] == "success" for r in selected_runs])
+            if not status_success:
+                ui.notify("Please select only successful runs to compare.")
+                return
+            # check if all selected runs are from the same step
+            step_names = set([r["name"] for r in selected_runs])
+            if len(step_names) > 1:
+                ui.notify("Please select runs from the same step to compare.")
+                return
+            compare_dialog.clear()
+            with compare_dialog, ui.card():
+                ui.label(f"Compare Runs for step {step_names.pop()}").classes(
+                    "text-2xl"
+                )
+                with ui.row().style(
+                    "display: flex; width: 100%; align-items: stretch;"
+                ):
+                    for run_data in selected_runs:
+                        # get the results for the selected run
+                        run: RunData = [
+                            run
+                            for run in runs
+                            if run.step_run_id == run_data["step_run_id"]
+                        ][0]
+                        with ui.column().style("flex: 1;"):
+                            with ui.card().style(
+                                "flex-grow: 1; display: flex; flex-direction: column;"
+                            ):
+                                ui.label(f"step_run_id: {run_data['step_run_id']}")
+                                ui.markdown(f"{run.output_data}")
+                                with ui.button_group().style("margin-top: auto;"):
+                                    ui.button(
+                                        icon="thumb_up",
+                                        on_click=lambda: rate_run(
+                                            run.step_run_id, "up"
+                                        ),
+                                    )
+                                    ui.button(
+                                        icon="thumb_down",
+                                        on_click=lambda: rate_run(
+                                            run.step_run_id, "down"
+                                        ),
+                                    )
+
+                ui.button("Close", on_click=compare_dialog.close)
+            compare_dialog.open()
 
         # Main UI setup
         with ui.card().style("padding: 20px"):
+            ui.button("Compare Runs", on_click=display_comparison).style(
+                "margin-bottom: 20px"
+            )
             # Create a table with clickable rows
             columns = [
-                {"name": "run_id", "label": "run_id", "field": "run_id"},
+                {
+                    "name": "run_id",
+                    "label": "run_id",
+                    "field": "run_id",
+                },
                 {"name": "step_run_id", "label": "step_run_id", "field": "step_run_id"},
                 {"name": "name", "label": "name", "field": "name", "sortable": True},
                 {
@@ -86,6 +158,8 @@ def create_runs_view(mage: PromptMage):
             table = ui.table(
                 columns=columns,
                 rows=rows,
+                selection="multiple",
+                row_key="step_run_id",
                 pagination={
                     "rowsPerPage": 20,
                     "sortBy": "run_time",

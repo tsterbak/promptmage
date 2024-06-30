@@ -1,7 +1,6 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 from nicegui import ui, run, app
-from loguru import logger
 
 from promptmage.mage import MageStep
 
