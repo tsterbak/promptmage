@@ -4,8 +4,10 @@ import json
 import click
 import uvicorn
 from pathlib import Path
+from loguru import logger
 
-from promptmage.utils import get_flow
+from promptmage import __version__
+from promptmage.utils import get_flows
 from promptmage.api import PromptMageAPI
 from promptmage.frontend import PromptMageFrontend
 from promptmage.storage import SQLiteDataBackend, SQLitePromptBackend
@@ -20,8 +22,6 @@ def promptmage():
 @click.command()
 def version():
     """Print the version of the PromptMage package."""
-    from promptmage import __version__
-
     click.echo(f"PromptMage version: {__version__}")
 
 
@@ -49,12 +49,14 @@ def run(file_path: str, host: str, port: int, browser: bool):
         port (int): The port to run the FastAPI server on.
         browser (bool): Whether to open the browser after starting the server.
     """
+    logger.info(f"Running PromptMage version {__version__} from {file_path}")
     # create the .promptmage directory to store all the data
     dirPath = Path(".promptmage")
     dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
 
-    # TODO: Implement a multi-flow approach
-    current_flow = get_flow(file_path)
+    # TODO: Implement a proper multi-flow approach
+    available_flows = get_flows(file_path)
+    current_flow = available_flows[0]
 
     if not current_flow:
         raise ValueError("No PromptMage instance found in the module.")
