@@ -43,9 +43,9 @@ To use promptmage, run the following command:
 promptmage run <path-to-flow>
 ```
 
-This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000`.
+This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000/gui/`.
 
-Have a look at the examples in the [examples](examples) folder to see how to use promptmage in your application or workflow.
+Have a look at the examples in the [examples](https://github.com/tsterbak/promptmage/tree/main/examples) folder to see how to use promptmage in your application or workflow.
 
 
 ## Use with Docker

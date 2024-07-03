@@ -60,7 +60,7 @@ You don't need to worry about saving the prompts and data, PromptMage will take 
 Now you can run the application by 
 
 ```bash
-promptmage summarizer.py
+promptmage run summarizer.py
 ```
 
 This will start the PromptMage web UI, where you can interact with the prompts and run and see the output of the steps.
