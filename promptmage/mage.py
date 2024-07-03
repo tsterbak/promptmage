@@ -1,4 +1,3 @@
-import uuid
 import inspect
 from loguru import logger
 from functools import wraps
@@ -7,7 +6,7 @@ from typing import Dict, Callable, List
 
 
 # Local imports
-from .prompt import Prompt
+from .step import MageStep
 from .run_data import RunData
 from .storage import PromptStore, DataStore
 
@@ -33,7 +32,7 @@ class PromptMage:
         self.prompt_store = prompt_store
         self.data_store = data_store
         self.available_models = available_models
-        self.steps: Dict = {}
+        self.steps: Dict[str, MageStep] = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
         # store the dependency graph
@@ -41,7 +40,7 @@ class PromptMage:
         self.graph = defaultdict(list)
         self.indegree = defaultdict(int)
 
-        # store pass_through_inputs
+        # store the pass_through_inputs
         self.pass_through_inputs = {}
 
     def step(
@@ -61,80 +60,18 @@ class PromptMage:
         """
 
         def decorator(func):
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                logger.info(f"Running step: {name}...")
-                status = "running"
-                logger.info(f"Step input: {args}, {kwargs}")
-                sig = inspect.signature(func)
-
-                # Get the prompt from the backend if it exists.
-                if prompt_name is not None:
-                    prompt = self.prompt_store.get_prompt(prompt_name)
-                    # extract the template variables from the function signature
-                    if prompt.template_vars == []:
-                        prompt.template_vars = [
-                            param
-                            for param in sig.parameters
-                            if param not in ["prompt", "model"]
-                        ]
-                        # Store the updated prompt
-                        self.prompt_store.store_prompt(prompt)
-                    # Add the prompt to the kwargs
-                    kwargs["prompt"] = prompt
-                # Store the pass_through_inputs
-                if pass_through_inputs:
-                    logger.info(f"Storing pass_through_inputs: {pass_through_inputs}")
-                    for var_name in pass_through_inputs:
-                        if var_name in kwargs:
-                            self.pass_through_inputs[var_name] = kwargs[var_name]
-                    logger.info(
-                        f"Stored pass_through_inputs: {self.pass_through_inputs}"
-                    )
-                # retrieve the pass_through_inputs if they exist
-                for var_name, value in self.pass_through_inputs.items():
-                    logger.info(
-                        f"Retrieving pass_through_input: {var_name} with value: {value}"
-                    )
-                    if var_name in sig.parameters and kwargs.get(var_name) is None:
-                        logger.info(
-                            f"Retrieving pass_through_input: {var_name} with value: {value}"
-                        )
-                        kwargs[var_name] = value
-                try:
-                    results = func(*args, **kwargs)
-                    status = "success"
-                except KeyError as e:
-                    results = f"Error: {e}"
-                    status = "failed"
-
-                # Store input and output data
-                if self.data_store:
-                    run_data = RunData(
-                        step_name=name,
-                        prompt=prompt if prompt_name else None,
-                        input_data={
-                            k: v
-                            for k, v in kwargs.items()
-                            if k not in ["prompt", "model"]
-                        },
-                        output_data=results,
-                        status=status,
-                        model=kwargs.get("model", None),
-                    )
-                    self.data_store.store_data(run_data)
-                logger.info(f"Step output: {results}")
-                return results
-
+            # get the function signature
             func_params = inspect.signature(func).parameters
+
+            # create and store the step
             self.steps[name] = MageStep(
                 name=name,
-                func=wrapper,
+                func=func,
                 prompt_store=self.prompt_store,
                 data_store=self.data_store,
                 prompt_name=prompt_name,
                 depends_on=depends_on,
+                pass_through_inputs=pass_through_inputs,
                 available_models=(
                     self.available_models if func_params.get("model") else None
                 ),
@@ -153,12 +90,15 @@ class PromptMage:
             else:
                 self.dependencies[name] = []
 
-            return wrapper
+            return func
 
         return decorator
 
     def _build_dependency_graph(self):
-        # Build the graph and compute in-degrees of each node
+        """Builds the dependency graph of the PromptMage instance.
+
+        Computes the indegree of each node in the graph.
+        """
         self.graph.clear()
         self.indegree.clear()
 
@@ -169,7 +109,8 @@ class PromptMage:
             if func_id not in self.indegree:
                 self.indegree[func_id] = 0
 
-    def topological_sort(self):
+    def _topological_sort(self) -> List:
+        """Returns a topological sort of the dependency graph."""
         order = []
         queue = deque([node for node in self.indegree if self.indegree[node] == 0])
 
@@ -194,7 +135,7 @@ class PromptMage:
         It has the same signature as the first function in the graph and takes these inputs.
         """
         self._build_dependency_graph()
-        order = self.topological_sort()
+        order = self._topological_sort()
 
         start_index = 0
         if start_from:
@@ -202,27 +143,50 @@ class PromptMage:
 
         def run_function(**initial_inputs):
             results = {}
-            for func_id in order[start_index:]:
-                func_node: MageStep = self.steps[func_id]
-                if func_id == order[start_index] and initial_inputs:
-                    # If it's the first function and initial_inputs are provided, use them
-                    results[func_id] = func_node.execute(**initial_inputs)
+            for step_id in order[start_index:]:
+                step: MageStep = self.steps[step_id]
+                # store the pass through inputs in self.pass_through_inputs
+                if step.pass_through_inputs:
+                    for pass_through_input in step.pass_through_inputs:
+                        if pass_through_input in initial_inputs:
+                            if pass_through_input not in self.pass_through_inputs:
+                                self.pass_through_inputs[pass_through_input] = (
+                                    initial_inputs[pass_through_input]
+                                )
+                            else:
+                                logger.warning(
+                                    f"Pass through input: {pass_through_input} already exists. Ignoring the new value."
+                                )
+                if step_id == order[start_index] and initial_inputs:
+                    # If it's the first step and initial_inputs are provided, use them
+                    results[step_id] = step.execute(**initial_inputs)
                 else:
-                    if self.dependencies[func_id]:
+                    # Otherwise, get the inputs from the previous step
+                    if self.dependencies[step_id]:
                         inputs = {
                             param: self.steps[dep].result
                             for dep, param in zip(
-                                self.dependencies[func_id],
-                                func_node.signature.parameters,
+                                self.dependencies[step_id],
+                                step.signature.parameters,
                             )
                         }
                     else:
                         inputs = {
-                            param: func_node.input_values[param]
-                            for param in func_node.signature.parameters
+                            param: step.input_values[param]
+                            for param in step.signature.parameters
                         }
-                    results[func_id] = func_node.execute(**inputs)
-            # return the results of the last function
+                    # inject the pass through inputs
+                    for pass_through_input in self.pass_through_inputs:
+                        if (
+                            pass_through_input in step.signature.parameters
+                            and pass_through_input not in inputs
+                        ):
+                            inputs[pass_through_input] = self.pass_through_inputs[
+                                pass_through_input
+                            ]
+                    # execute the step
+                    results[step_id] = step.execute(**inputs)
+            # return the results of the last step
             return results[order[-1]]
 
         # Set the signature of the returned function to match the first function in the graph
@@ -241,74 +205,3 @@ class PromptMage:
             # filter by step_name
             return [run for run in runs if run.step_name in self.steps]
         return []
-
-
-class MageStep:
-    def __init__(
-        self,
-        name: str,
-        func: Callable,
-        prompt_store: PromptStore,
-        data_store: DataStore,
-        prompt_name: str | None = None,
-        depends_on: str | None = None,
-        model: str | None = None,
-        available_models: List[str] | None = None,
-    ):
-        self.step_id = str(uuid.uuid4())
-        self.name = name
-        self.func = func
-        self.signature = inspect.signature(func)
-        self.prompt_store = prompt_store
-        self.data_store = data_store
-        self.prompt_name = prompt_name
-        self.depends_on = depends_on
-        self.model = model
-        self.available_models = available_models
-
-        # store inputs and results
-        self.input_values = {}
-        self.result = None
-
-        # Initialize input values with default parameter values
-        for param in self.signature.parameters.values():
-            if param.name in ["prompt", "model"]:
-                continue
-            if param.default is not inspect.Parameter.empty:
-                self.input_values[param.name] = param.default
-            else:
-                self.input_values[param.name] = None
-
-        # callbacks for the frontend
-        self._input_callbacks = []
-        self._output_callbacks = []
-
-    def execute(self, **inputs):
-        for key, value in inputs.items():
-            self.input_values[key] = value
-        if self.model:
-            self.input_values["model"] = self.model
-        for callback in self._input_callbacks:
-            callback()
-        self.result = self.func(**self.input_values)
-        # run the callbacks
-        for callback in self._output_callbacks:
-            callback()
-        return self.result
-
-    def __repr__(self):
-        return f"Step(step_id={self.step_id}, name={self.name}, prompt_name={self.prompt_name}, depends_on={self.depends_on})"
-
-    def get_prompt(self) -> Prompt:
-        return self.prompt_store.get_prompt(self.prompt_name)
-
-    def set_prompt(self, prompt: Prompt):
-        prompt.id = str(uuid.uuid4())
-        prompt.version = prompt.version + 1
-        self.prompt_store.store_prompt(prompt)
-
-    def on_input_change(self, callback):
-        self._input_callbacks.append(callback)
-
-    def on_output_change(self, callback):
-        self._output_callbacks.append(callback)
