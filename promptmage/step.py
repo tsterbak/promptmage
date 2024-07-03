@@ -51,6 +51,7 @@ class MageStep:
         self._output_callbacks = []
 
     def execute(self, **inputs):
+        """Execute the step with the given inputs."""
         logger.info(f"Executing step: {self.name}...")
         # set the inputs
         logger.info(f"Setting inputs: {inputs.keys()}")

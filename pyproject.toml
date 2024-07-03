@@ -22,6 +22,7 @@ uvicorn = {extras = ["standard"], version = "^0.29.0"}
 setuptools = "^69.5.1"
 nicegui = "^1.4.25"
 fastapi = ">=0.109.1,<0.110.0"
+sqlalchemy = "^2.0.31"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
