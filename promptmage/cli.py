@@ -6,7 +6,7 @@ import uvicorn
 from pathlib import Path
 from loguru import logger
 
-from promptmage import __version__
+from promptmage import __version__, title
 from promptmage.utils import get_flows
 from promptmage.api import PromptMageAPI
 from promptmage.frontend import PromptMageFrontend
@@ -49,6 +49,7 @@ def run(file_path: str, host: str, port: int, browser: bool):
         port (int): The port to run the FastAPI server on.
         browser (bool): Whether to open the browser after starting the server.
     """
+    logger.info(f"\nWelcome to\n{title}")
     logger.info(f"Running PromptMage version {__version__} from {file_path}")
     # create the .promptmage directory to store all the data
     dirPath = Path(".promptmage")
