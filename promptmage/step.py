@@ -4,6 +4,7 @@ from typing import Callable, List
 from loguru import logger
 
 from .prompt import Prompt
+from .run_data import RunData
 from .storage import PromptStore, DataStore
 
 
@@ -52,7 +53,7 @@ class MageStep:
     def execute(self, **inputs):
         logger.info(f"Executing step: {self.name}...")
         # set the inputs
-        logger.info(f"Setting inputs: {inputs}")
+        logger.info(f"Setting inputs: {inputs.keys()}")
         for key, value in inputs.items():
             self.input_values[key] = value
         # set the model
@@ -62,11 +63,20 @@ class MageStep:
         if self.prompt_name:
             prompt = self.get_prompt()
             self.input_values["prompt"] = prompt
+        else:
+            prompt = None
         # run the input callbacks
         for callback in self._input_callbacks:
             callback()
         # execute the function and store the result
-        self.result = self.func(**self.input_values)
+        try:
+            self.result = self.func(**self.input_values)
+            status = "success"
+        except Exception as e:
+            self.result = f"Error: {e}"
+            status = "failed"
+        # store the run data
+        self.store_run(prompt=prompt, status=status)
         # run the output callbacks
         for callback in self._output_callbacks:
             callback()
@@ -83,6 +93,27 @@ class MageStep:
         prompt.id = str(uuid.uuid4())
         prompt.version = prompt.version + 1
         self.prompt_store.store_prompt(prompt)
+
+    def store_run(
+        self,
+        prompt: Prompt | None = None,
+        status: str = "success",
+    ):
+        """Store the run data in the data store."""
+        if self.data_store:
+            run_data = RunData(
+                step_name=self.name,
+                prompt=prompt if self.prompt_name else None,
+                input_data={
+                    k: v
+                    for k, v in self.input_values.items()
+                    if k not in ["prompt", "model"]
+                },
+                output_data=self.result,
+                status=status,
+                model=self.model,
+            )
+            self.data_store.store_data(run_data)
 
     def on_input_change(self, callback):
         self._input_callbacks.append(callback)
