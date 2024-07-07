@@ -18,33 +18,9 @@ client = OpenAI(
     # api_key="ollama",  # required, but unused
 )
 
-# Setup the prompt store and data store
-prompt_store = PromptStore(backend=SQLitePromptBackend())
-# prompt_store.store_prompt(
-#     Prompt(
-#         name="extract_facts",
-#         template_vars=["article"],
-#         system="You are a helpful assistant.",
-#         user="Extract the facts from this article and return the results as a markdown list:\n\n<article>{article}</article> Make sure to include all the important details and don't make up any information.",
-#         version=1,
-#     )
-# )
-# prompt_store.store_prompt(
-#     Prompt(
-#         name="summarize_facts",
-#         template_vars=["facts"],
-#         system="You are a helpful assistant.",
-#         user="Summarize the following facts into a single sentence:\n\n{facts}",
-#         version=1,
-#     )
-# )
-data_store = DataStore(backend=SQLiteDataBackend())
-
 # Create a new PromptMage instance
 mage = PromptMage(
     name="fact-extraction",
-    prompt_store=prompt_store,
-    data_store=data_store,
     available_models=["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
 )
 

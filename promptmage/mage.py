@@ -8,7 +8,7 @@ from typing import Dict, Callable, List
 # Local imports
 from .step import MageStep
 from .run_data import RunData
-from .storage import PromptStore, DataStore
+from .storage import PromptStore, DataStore, SQLitePromptBackend, SQLiteDataBackend
 
 
 class PromptMage:
@@ -29,8 +29,12 @@ class PromptMage:
         available_models: List[str] | None = None,
     ):
         self.name: str = name
-        self.prompt_store = prompt_store
-        self.data_store = data_store
+        self.prompt_store = (
+            prompt_store if prompt_store else PromptStore(backend=SQLitePromptBackend())
+        )
+        self.data_store = (
+            data_store if data_store else DataStore(backend=SQLiteDataBackend())
+        )
         self.available_models = available_models
         self.steps: Dict[str, MageStep] = {}
         logger.info(f"Initialized PromptMage with name: {name}")
