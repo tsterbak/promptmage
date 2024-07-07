@@ -3,6 +3,7 @@
 import inspect
 import pkg_resources
 from loguru import logger
+from typing import List
 from pathlib import Path
 from pydantic import BaseModel
 
@@ -18,8 +19,9 @@ from promptmage import PromptMage
 class PromptMageAPI:
     """A class that creates a FastAPI application to serve a PromptMage instance."""
 
-    def __init__(self, mage: PromptMage):
-        self.mage = mage
+    def __init__(self, flows: List[PromptMage]):
+        self.flows = flows
+        self.mage = flows[0]
 
     def get_app(self) -> FastAPI:
         """Create a FastAPI application to serve the PromptMage instance."""

@@ -2,7 +2,6 @@
 
 import inspect
 from nicegui import ui, run
-from loguru import logger
 
 from promptmage import PromptMage
 

@@ -23,6 +23,7 @@ setuptools = "^69.5.1"
 nicegui = "^1.4.25"
 fastapi = ">=0.109.1,<0.110.0"
 sqlalchemy = "^2.0.31"
+python-slugify = "^8.0.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

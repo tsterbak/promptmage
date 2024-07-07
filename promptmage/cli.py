@@ -55,18 +55,17 @@ def run(file_path: str, host: str, port: int, browser: bool):
     dirPath = Path(".promptmage")
     dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
 
-    # TODO: Implement a proper multi-flow approach
+    # get the available flows from the source file
     available_flows = get_flows(file_path)
-    current_flow = available_flows[0]
 
-    if not current_flow:
+    if not available_flows:
         raise ValueError("No PromptMage instance found in the module.")
 
     # create the FastAPI app
-    app = PromptMageAPI(mage=current_flow).get_app()
+    app = PromptMageAPI(flows=available_flows).get_app()
 
     # create the frontend app
-    frontend = PromptMageFrontend(mage=current_flow)
+    frontend = PromptMageFrontend(flows=available_flows)
     frontend.init_from_api(app)
 
     # Run the applications

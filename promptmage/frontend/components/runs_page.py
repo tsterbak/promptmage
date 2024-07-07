@@ -1,6 +1,7 @@
 from typing import List
 from loguru import logger
 from nicegui import ui, app
+from slugify import slugify
 
 from promptmage import PromptMage, RunData
 
@@ -15,7 +16,7 @@ def create_runs_view(mage: PromptMage):
 
     def use_run_in_playground(step_run_id):
         app.storage.user["step_run_id"] = step_run_id
-        ui.navigate.to("/")
+        ui.navigate.to(f"/{slugify(mage.name)}")
 
     # Function to show the side panel with detailed information
     def show_side_panel(run_data: RunData):

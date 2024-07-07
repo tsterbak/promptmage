@@ -2,50 +2,53 @@
 
 from fastapi import FastAPI
 from nicegui import ui
+from typing import List
+from slugify import slugify
 
 from promptmage import PromptMage
-from promptmage.mage import MageStep
 
 from .components import theme
-from .components.main_runner import create_main_runner
-from .components.step_runner import create_function_runner
 from .components.runs_page import create_runs_view
 from .components.prompts_page import create_prompts_view
+from .components.overview_page import build_overview_page
+from .components.flow_page import build_flow_page
 
 
 class PromptMageFrontend:
     """A class that creates a frontend for a PromptMage instance."""
 
-    def __init__(self, mage: PromptMage):
-        self.mage = mage
+    def __init__(self, flows: List[PromptMage]):
+        self.flows = flows
+        self.flows_dict = {slugify(flow.name): flow for flow in flows}
+        self.current_flow = self.flows[0]
 
     def init_from_api(self, fastapi_app: FastAPI) -> None:
         """Initialize the frontend from a FastAPI application."""
 
         @ui.page("/", title="PromptMage")
         def main_page():
-            with theme.frame("Welcome to the PromptMage"):
-                with ui.row().style("flex-wrap: wrap;"):
-                    # Create a card for the mage
-                    with ui.column().style("flex-wrap: wrap;"):
-                        with ui.card():
-                            ui.label("Run all steps")
-                            create_main_runner(self.mage)()
-                    # Create a card for each step
-                    with ui.column().style("flex-wrap: wrap;"):
-                        step: MageStep
-                        for step in self.mage.steps.values():
-                            create_function_runner(step)()
+            with theme.frame(
+                "Welcome to the PromptMage", flow_name=slugify(self.current_flow.name)
+            ):
+                build_overview_page(self.flows)
 
-        @ui.page("/runs", title="PromptMage - Runs")
-        def runs_page():
-            with theme.frame("Runs Overview"):
-                create_runs_view(self.mage)()
+        @ui.page("/{flow_name}", title="PromptMage - Flow")
+        def flow_page(flow_name: str):
+            self.current_flow = self.flows_dict[flow_name]
+            with theme.frame(f"Playground {flow_name}", flow_name=flow_name):
+                build_flow_page(self.flows_dict[flow_name])
 
-        @ui.page("/prompts", title="PromptMage - Prompts")
-        def prompts_page():
-            with theme.frame("Prompts Overview"):
-                create_prompts_view(self.mage)()
+        @ui.page("/runs/{flow_name}", title="PromptMage - Runs")
+        def runs_page(flow_name: str):
+            self.current_flow = self.flows_dict[flow_name]
+            with theme.frame(f"Runs Overview - {flow_name}", flow_name=flow_name):
+                create_runs_view(self.current_flow)()
+
+        @ui.page("/prompts/{flow_name}", title="PromptMage - Prompts")
+        def prompts_page(flow_name: str):
+            self.current_flow = self.flows_dict[flow_name]
+            with theme.frame(f"Prompts Overview _ {flow_name}", flow_name=flow_name):
+                create_prompts_view(self.current_flow)()
 
         ui.run_with(
             fastapi_app,
