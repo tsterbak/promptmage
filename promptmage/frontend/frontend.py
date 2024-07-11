@@ -12,6 +12,7 @@ from .components.runs_page import create_runs_view
 from .components.prompts_page import create_prompts_view
 from .components.overview_page import build_overview_page
 from .components.flow_page import build_flow_page
+from .components.evaluation_page import build_evaluation_page
 
 
 class PromptMageFrontend:
@@ -49,6 +50,23 @@ class PromptMageFrontend:
             self.current_flow = self.flows_dict[flow_name]
             with theme.frame(f"Prompts Overview _ {flow_name}", flow_name=flow_name):
                 create_prompts_view(self.current_flow)()
+
+        @ui.page("/evaluation/{flow_name}", title="PromptMage - Evaluation")
+        def evaluation_page(flow_name: str):
+            self.current_flow = self.flows_dict[flow_name]
+            with theme.frame(f"Evaluation - {flow_name}", flow_name=flow_name):
+                build_evaluation_page(self.current_flow)
+
+        @ui.page(
+            "/evaluation/{flow_name}/{dataset_id}",
+            title="PromptMage - Evaluation Dataset",
+        )
+        def evaluation_dataset_page(flow_name: str, dataset_id: str):
+            self.current_flow = self.flows_dict[flow_name]
+            with theme.frame(
+                f"Evaluation - {flow_name} - {dataset_id}", flow_name=flow_name
+            ):
+                ui.label(f"Dataset ID: {dataset_id}")
 
         ui.run_with(
             fastapi_app,

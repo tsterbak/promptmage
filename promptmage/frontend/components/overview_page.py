@@ -27,5 +27,4 @@ def create_grid(elements, columns=4):
 
 
 def build_overview_page(flows: List[PromptMage]):
-    with ui.column().classes("items-center"):
-        create_grid(flows, columns=3)
+    create_grid(flows, columns=4)

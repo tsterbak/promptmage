@@ -15,3 +15,6 @@ def menu(flow_name: str) -> None:
         ui.button(
             "Prompts", on_click=lambda: ui.navigate.to(f"/prompts/{flow_name}")
         ).classes(replace="text-white")
+        ui.button(
+            "Evaluation", on_click=lambda: ui.navigate.to(f"/evaluation/{flow_name}")
+        ).classes(replace="text-white")

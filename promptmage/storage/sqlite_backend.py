@@ -1,11 +1,24 @@
 """This module contains the SQLiteBackend class, which is a subclass of the StorageBackend class. It is used to store the data in a SQLite database."""
 
 import json
+import uuid
 from loguru import logger
 from typing import List, Dict
-from sqlalchemy import create_engine, Column, String, Integer, Text, select, delete
+from sqlalchemy import (
+    create_engine,
+    Column,
+    String,
+    Integer,
+    Text,
+    select,
+    delete,
+    DateTime,
+    UUID,
+    ForeignKey,
+)
+from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.exc import SQLAlchemyError
 
 from promptmage.prompt import Prompt
@@ -14,6 +27,10 @@ from promptmage.run_data import RunData
 from promptmage.storage.storage_backend import StorageBackend
 
 Base = declarative_base()
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
 
 
 class PromptModel(Base):
@@ -199,6 +216,62 @@ class RunDataModel(Base):
         return f"RunDataModel(step_run_id={self.step_run_id}, run_time={self.run_time}, step_name={self.step_name}, run_id={self.run_id}, status={self.status}, prompt={self.prompt}, input_data={self.input_data}, output_data={self.output_data})"
 
 
+class EvaluationDatasetModel(Base):
+    __tablename__ = "evaluation_datasets"
+    id = Column("id", String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False)
+    created = Column(DateTime(timezone=True), server_default=func.now())
+    updated = Column(DateTime(timezone=True), onupdate=func.now())
+    datapoints = relationship(
+        "EvaluationDatapointModel",
+        back_populates="dataset",
+        cascade="all, delete-orphan",
+    )
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "EvaluationDatasetModel":
+        return cls(
+            id=data["id"],
+            name=data["name"],
+        )
+
+    def to_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+        }
+
+    def __repr__(self):
+        return f"EvaluationDatasetModel(id={self.id}, name={self.name})"
+
+
+class EvaluationDatapointModel(Base):
+    __tablename__ = "evaluation_datapoints"
+    id = Column("id", String, primary_key=True, default=generate_uuid)
+    dataset_id = Column(String, ForeignKey("evaluation_datasets.id"))
+    dataset = relationship("EvaluationDatasetModel", back_populates="datapoints")
+    run_data_id = Column(String, ForeignKey("data.step_run_id"))
+    rating = Column(Integer, nullable=True)
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "EvaluationDatapointModel":
+        return cls(
+            id=data["id"],
+            dataset_id=data["dataset_id"],
+            run_data_id=data["run_data_id"],
+        )
+
+    def to_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "dataset_id": self.dataset_id,
+            "run_data_id": self.run_data_id,
+        }
+
+    def __repr__(self):
+        return f"EvaluationDatapointModel(id={self.id}, dataset_id={self.dataset_id}, run_data_id={self.run_data_id})"
+
+
 class SQLiteDataBackend(StorageBackend):
     """A class that stores the data in a SQLite database.
 
@@ -240,5 +313,122 @@ class SQLiteDataBackend(StorageBackend):
         try:
             run_data_list = session.execute(select(RunDataModel)).scalars().all()
             return [RunData(**d.to_dict()) for d in run_data_list]
+        finally:
+            session.close()
+
+    def create_dataset(self, name: str):
+        session = self.Session()
+        try:
+            dataset = EvaluationDatasetModel(name=name)
+            session.add(dataset)
+            session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error creating dataset: {e}")
+        finally:
+            session.close()
+
+    def delete_dataset(self, dataset_id: str):
+        session = self.Session()
+        try:
+            result = session.execute(
+                delete(EvaluationDatasetModel).where(
+                    EvaluationDatasetModel.id == dataset_id
+                )
+            )
+            if result.rowcount == 0:
+                raise ValueError(f"Dataset with ID {dataset_id} not found.")
+            session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error deleting dataset: {e}")
+        finally:
+            session.close()
+
+    def add_datapoint_to_dataset(self, datapoint_id, dataset_id):
+        session = self.Session()
+        try:
+            datapoint = EvaluationDatapointModel(
+                run_data_id=datapoint_id, dataset_id=dataset_id
+            )
+            session.add(datapoint)
+            session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error adding datapoint to dataset: {e}")
+        finally:
+            session.close()
+
+    def get_datasets(self) -> List[EvaluationDatasetModel]:
+        session = self.Session()
+        try:
+            datasets = session.execute(select(EvaluationDatasetModel)).scalars().all()
+            logger.info(f"Datasets: {datasets}")
+            return [d for d in datasets]
+        finally:
+            session.close()
+
+    def get_datapoints(self, dataset_id: str) -> List[EvaluationDatapointModel]:
+        session = self.Session()
+        try:
+            datapoints = (
+                session.execute(
+                    select(EvaluationDatapointModel).where(
+                        EvaluationDatapointModel.dataset_id == dataset_id
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            return [d for d in datapoints]
+        finally:
+            session.close()
+
+    def get_datapoint(self, datapoint_id: str) -> EvaluationDatapointModel:
+        session = self.Session()
+        try:
+            datapoint = session.execute(
+                select(EvaluationDatapointModel).where(
+                    EvaluationDatapointModel.id == datapoint_id
+                )
+            ).scalar_one_or_none()
+            if datapoint is None:
+                raise ValueError(f"Datapoint with ID {datapoint_id} not found.")
+            return datapoint
+        finally:
+            session.close()
+
+    def rate_datapoint(self, datapoint_id: str, rating: int):
+        session = self.Session()
+        try:
+            datapoint = session.execute(
+                select(EvaluationDatapointModel).where(
+                    EvaluationDatapointModel.id == datapoint_id
+                )
+            ).scalar_one_or_none()
+            if datapoint is None:
+                raise ValueError(f"Datapoint with ID {datapoint_id} not found.")
+            datapoint.rating = rating
+            session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error rating datapoint: {e}")
+        finally:
+            session.close()
+
+    def remove_datapoint_from_dataset(self, datapoint_id: str, dataset_id: str):
+        session = self.Session()
+        try:
+            result = session.execute(
+                delete(EvaluationDatapointModel).where(
+                    EvaluationDatapointModel.id == datapoint_id
+                )
+            )
+            if result.rowcount == 0:
+                raise ValueError(f"Datapoint with ID {datapoint_id} not found.")
+            session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error removing datapoint from dataset: {e}")
         finally:
             session.close()
