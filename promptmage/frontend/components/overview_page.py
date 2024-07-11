@@ -19,7 +19,7 @@ def flow_card(flow: PromptMage):
 def create_grid(elements, columns=4):
     rows = len(elements) // columns + (1 if len(elements) % columns > 0 else 0)
     for i in range(rows):
-        with ui.row().classes("justify-center"):
+        with ui.row():
             for j in range(columns):
                 index = i * columns + j
                 if index < len(elements):

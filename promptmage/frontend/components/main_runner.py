@@ -4,6 +4,7 @@ import inspect
 from nicegui import ui, run
 
 from promptmage import PromptMage
+from .styles import textbox_style
 
 
 def create_main_runner(mage: PromptMage):
@@ -19,22 +20,21 @@ def create_main_runner(mage: PromptMage):
 
     def build_ui():
         nonlocal result_field
-        with ui.column().style(
-            "border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; width: 600px; height: 800px; overflow-y: auto;"
-        ):
-            ui.label("Flow Runner").style("font-weight: bold; font-size: 1.5em;")
+        with ui.column().classes("w-full"):
             ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
             for param in inspect.signature(flow_func).parameters.values():
                 if param.name not in ["prompt", "model"]:
-                    with ui.row():
+                    with ui.row().classes("w-full"):
                         ui.label(f"{param.name}:").style("width: 100px;")
-                        input_fields[param.name] = ui.textarea().style(
-                            "flex-grow: 2; overflow: auto; width: 500px; height: 200px;"
+                        input_fields[param.name] = (
+                            ui.textarea()
+                            .classes(textbox_style)
+                            .style("padding-top: 0px;")
                         )
 
             ui.button("Run", on_click=run_function).style("margin-top: 10px;")
             ui.separator()
-            with ui.row():
+            with ui.row().classes("w-full"):
                 ui.button(
                     icon="content_copy",
                     on_click=lambda: ui.clipboard.write(result_field.content),

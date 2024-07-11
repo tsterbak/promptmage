@@ -4,6 +4,7 @@ from nicegui import ui, run, app
 from loguru import logger
 
 from promptmage.mage import MageStep
+from .styles import textbox_style
 
 
 RUNNING_ICON = "run_circle"
@@ -17,11 +18,9 @@ def create_function_runner(step: MageStep):
     user_prompt_field = None
     model_select = None
     result_field = None
-    expansion_tab = (
-        ui.expansion(f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}")
-        .classes("w-full")
-        .style("width: 650px;")
-    )
+    expansion_tab = ui.expansion(
+        f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}"
+    ).classes("w-full text-lg")
     # load prompt if available
     if step.prompt_name:
         prompt = step.get_prompt()
@@ -81,83 +80,61 @@ def create_function_runner(step: MageStep):
 
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab, model_select
-        with expansion_tab:
-            with ui.card():
-                ui.label(f"{step.name} - {step.step_id}")
-                with ui.column().style(
-                    "border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; width: 1000px; height: 700px; overflow-y: auto;"
-                ):
-                    ui.label("Step Runner").style(
-                        "font-weight: bold; font-size: 1.5em;"
-                    )
-                    # show available models if available
-                    if step.available_models:
-                        with ui.row():
-                            ui.label("Select model:").style("margin-top: 20px;")
-                            model_select = ui.select(
-                                step.available_models,
-                                label="Select model",
-                                value=step.model,
-                            )
+        with expansion_tab.classes("w-full border"):
+            ui.label(f"ID: {step.step_id}")
+            with ui.column():
+                # show available models if available
+                if step.available_models:
                     with ui.row():
-                        ui.label("Inputs:").style(
-                            "margin-top: 20px; font-weight: bold;"
+                        ui.label("Select model:").style("margin-top: 20px;")
+                        model_select = ui.select(
+                            step.available_models,
+                            label="Select model",
+                            value=step.model,
                         )
-                        with ui.column().style("flex-grow: 1; margin-top: 20px;"):
-                            for param in step.signature.parameters.values():
-                                if param.name not in ["prompt", "model"]:
-                                    with ui.row():
-                                        ui.label(f"{param.name}:").style(
-                                            "width: 100px;"
-                                        )
-                                        input_fields[param.name] = ui.textarea(
-                                            value=step.input_values[param.name]
-                                        ).style("flex-grow: 1; overflow: auto;")
-                        ui.label("Prompts:").style(
-                            "margin-top: 20px; font-weight: bold;"
-                        )
-                        with ui.column().style("flex-grow: 1; margin-top: 20px;"):
-                            with ui.row():
-                                ui.label("System:").style("width: 100px;")
-                                system_prompt_field = ui.textarea(
-                                    value=(
-                                        prompt.system
-                                        if prompt
-                                        else "No prompt supported"
-                                    )
-                                ).style(
-                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
+                with ui.row():
+                    ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
+                    with ui.column().style("margin-top: 20px;").classes("w-full"):
+                        for param in step.signature.parameters.values():
+                            if param.name not in ["prompt", "model"]:
+                                with ui.row():
+                                    ui.label(f"{param.name}:")
+                                    input_fields[param.name] = ui.textarea(
+                                        value=step.input_values[param.name]
+                                    ).classes(textbox_style)
+                    ui.label("Prompts:").style("margin-top: 20px; font-weight: bold;")
+                    with ui.column().style("margin-top: 20px;").classes("w-full"):
+                        with ui.row().classes("w-full"):
+                            ui.label("System:")
+                            system_prompt_field = ui.textarea(
+                                value=(
+                                    prompt.system if prompt else "No prompt supported"
                                 )
-                            with ui.row():
-                                ui.label("User:").style("width: 100px;")
-                                user_prompt_field = ui.textarea(
-                                    value=(
-                                        prompt.user if prompt else "No prompt supported"
-                                    )
-                                ).style(
-                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
-                                )
+                            ).classes(textbox_style)
+                        with ui.row().classes("w-full"):
+                            ui.label("User:")
+                            user_prompt_field = ui.textarea(
+                                value=(prompt.user if prompt else "No prompt supported")
+                            ).classes(textbox_style)
 
-                    with ui.row():
-                        ui.button("Run", on_click=run_function).style(
-                            "margin-top: 10px;"
-                        )
-                        ui.button("Save prompt", on_click=set_prompt).style(
-                            "margin-top: 10px; margin-left: 10px;"
-                        )
-                    ui.separator()
-                    with ui.row():
-                        ui.label("Result:").style(
-                            "margin-top: 20px; font-weight: bold;"
-                        )
-                        ui.button(
-                            icon="content_copy",
-                            on_click=lambda: ui.clipboard.write(
-                                step.result or "No result available"
-                            ),
-                        ).props("fab")
-                    result_field = ui.markdown(
-                        f"{step.result}" if step.result else ""
-                    ).style("margin-top: 20px; color: blue; height: 200px;")
+                with ui.row().classes("w-full"):
+                    ui.button("Run", on_click=run_function).style("margin-top: 10px;")
+                    ui.button("Save prompt", on_click=set_prompt).style(
+                        "margin-top: 10px; margin-left: 10px;"
+                    )
+                ui.separator()
+                with ui.row().classes("w-full"):
+                    ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
+                    ui.button(
+                        icon="content_copy",
+                        on_click=lambda: ui.clipboard.write(
+                            step.result or "No result available"
+                        ),
+                    ).props("fab")
+                result_field = (
+                    ui.markdown(f"{step.result}" if step.result else "")
+                    .style("margin-top: 20px; color: blue;")
+                    .classes("w-full")
+                )
 
     return build_ui
