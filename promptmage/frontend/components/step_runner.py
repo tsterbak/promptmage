@@ -80,7 +80,7 @@ def create_function_runner(step: MageStep):
 
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab, model_select
-        with expansion_tab.classes("w-full border"):
+        with expansion_tab.classes("border"):
             ui.label(f"ID: {step.step_id}")
             with ui.column():
                 # show available models if available
@@ -123,7 +123,7 @@ def create_function_runner(step: MageStep):
                         "margin-top: 10px; margin-left: 10px;"
                     )
                 ui.separator()
-                with ui.row().classes("w-full"):
+                with ui.row().classes("w-full overflow-y-auto"):
                     ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
                     ui.button(
                         icon="content_copy",

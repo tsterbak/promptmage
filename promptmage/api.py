@@ -94,6 +94,7 @@ class PromptMageAPI:
                 signature = inspect.signature(step.func)
                 path = f"/api/{slugify(flow.name)}/{step_name}"
                 params, path_variables = self._parameters_from_signature(signature)
+                # TODO: not use path variables but build a request body dynamically
                 path += path_variables
 
                 # Update the signature for the endpoint function
@@ -187,4 +188,4 @@ class EndpointResponse(BaseModel):
     name: str
     status: int = 500
     message: str = "Internal Server Error"
-    result: str | None = None
+    result: str | List[str] | None = None

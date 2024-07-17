@@ -9,6 +9,24 @@ from .storage import PromptStore, DataStore
 
 
 class MageStep:
+    """A class to represent a step in a PromptMage instance.
+
+    Attributes:
+        step_id (str): The unique identifier for the step.
+        name (str): The name of the step.
+        func (Callable): The function to execute for the step.
+        signature (inspect.Signature): The signature of the function.
+        prompt_store (PromptStore): The prompt store to use for storing prompts.
+        data_store (DataStore): The data store to use for storing data.
+        prompt_name (str): The name of the prompt associated with the step.
+        depends_on (str): The name of the step that this step depends on.
+        one_to_many (bool): Whether the step is a one-to-many step.
+        many_to_one (bool): Whether the step is a many-to-one step.
+        model (str): The model to use for the step.
+        available_models (List[str]): The available models for the step.
+        pass_through_inputs (List[str]): The inputs to pass through to the next step.
+    """
+
     def __init__(
         self,
         name: str,
@@ -17,6 +35,8 @@ class MageStep:
         data_store: DataStore,
         prompt_name: str | None = None,
         depends_on: str | None = None,
+        one_to_many: bool = False,
+        many_to_one: bool = False,
         model: str | None = None,
         available_models: List[str] | None = None,
         pass_through_inputs: List[str] | None = None,
@@ -29,6 +49,8 @@ class MageStep:
         self.data_store = data_store
         self.prompt_name = prompt_name
         self.depends_on = depends_on
+        self.one_to_many = one_to_many
+        self.many_to_one = many_to_one
         self.model = model
         self.available_models = available_models
         self.pass_through_inputs = pass_through_inputs
@@ -53,9 +75,12 @@ class MageStep:
     def execute(self, **inputs):
         """Execute the step with the given inputs."""
         logger.info(f"Executing step: {self.name}...")
+        multi_input_param = None
         # set the inputs
         logger.info(f"Setting inputs: {inputs.keys()}")
         for key, value in inputs.items():
+            if isinstance(value, list):
+                multi_input_param = key
             self.input_values[key] = value
         # set the model
         if self.model:
@@ -71,7 +96,25 @@ class MageStep:
             callback()
         # execute the function and store the result
         try:
-            self.result = self.func(**self.input_values)
+            if self.one_to_many:
+                logger.info("Executing step one-to-many")
+                self.result = []
+                if multi_input_param:
+                    param_values = self.input_values[multi_input_param]
+                    for value in param_values:
+                        self.input_values[multi_input_param] = value
+                        self.result.append(self.func(**self.input_values))
+                    self.input_values[multi_input_param] = param_values
+                else:
+                    raise ValueError(
+                        "One-to-many step requires a list input parameter."
+                    )
+            elif self.many_to_one:
+                logger.info("Executing step many-to-one")
+                self.result = self.func(**self.input_values)
+            else:
+                logger.info("Executing step normally")
+                self.result = self.func(**self.input_values)
             status = "success"
         except Exception as e:
             self.result = f"Error: {e}"

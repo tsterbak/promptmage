@@ -52,6 +52,8 @@ class PromptMage:
         name: str,
         prompt_name: str | None = None,
         depends_on: List[str] | str | None = None,
+        one_to_many: bool = False,
+        many_to_one: bool = False,
         pass_through_inputs: List[str] | None = None,
     ) -> Callable:
         """Decorator to add a step to the PromptMage instance.
@@ -60,8 +62,16 @@ class PromptMage:
             name (str): The name of the step.
             prompt_name (str, optional): The name of the prompt to use for this step. Defaults to None.
             depends_on (str, optional): The name of the step that this step depends on. Defaults to None.
+            one_to_many (bool, optional): Whether this step is a one-to-many step. Defaults to False.
+            many_to_one (bool, optional): Whether this step is a many-to-one step. Defaults to False.
             pass_through_inputs (List[str], optional): The list of inputs to pass through to the step that requires them. Defaults to None.
+
+        One-to-many steps are steps that are expected to return Iterable outputs. Following steps will be executed for each output.
+        Many-to-one steps are steps that are expected to receive Iterable inputs. The step will be executed on all inputs together.
         """
+        assert not (
+            one_to_many and many_to_one
+        ), "Cannot be both one-to-many and many-to-one."
 
         def decorator(func):
             # get the function signature
@@ -75,6 +85,8 @@ class PromptMage:
                 data_store=self.data_store,
                 prompt_name=prompt_name,
                 depends_on=depends_on,
+                one_to_many=one_to_many,
+                many_to_one=many_to_one,
                 pass_through_inputs=pass_through_inputs,
                 available_models=(
                     self.available_models if func_params.get("model") else None
