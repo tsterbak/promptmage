@@ -20,7 +20,7 @@ def create_function_runner(step: MageStep):
     result_field = None
     expansion_tab = ui.expansion(
         f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}"
-    ).classes("w-full text-lg")
+    ).classes("text-lg w-full border")
     # load prompt if available
     if step.prompt_name:
         prompt = step.get_prompt()
@@ -40,7 +40,7 @@ def create_function_runner(step: MageStep):
             del app.storage.user["step_run_id"]
 
     async def run_function():
-        expansion_tab.props("icon=run_circle")
+        expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
         inputs = {name: field.value for name, field in input_fields.items()}
         if prompt is not None:
@@ -49,7 +49,10 @@ def create_function_runner(step: MageStep):
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
-        result = await run.io_bound(step.execute, **inputs)
+        _ = await run.io_bound(step.execute, **inputs)
+        if step.one_to_many:
+            num_results = len(step.result)
+            expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
 
@@ -73,6 +76,9 @@ def create_function_runner(step: MageStep):
         result_field.update()
 
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
+        if step.one_to_many:
+            num_results = len(step.result)
+            expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.update()
 
     step.on_input_change(update_inputs)
@@ -80,7 +86,7 @@ def create_function_runner(step: MageStep):
 
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab, model_select
-        with expansion_tab.classes("border"):
+        with expansion_tab:
             ui.label(f"ID: {step.step_id}")
             with ui.column():
                 # show available models if available
@@ -94,7 +100,7 @@ def create_function_runner(step: MageStep):
                         )
                 with ui.row():
                     ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
-                    with ui.column().style("margin-top: 20px;").classes("w-full"):
+                    with ui.column().style("margin-top: 20px;"):
                         for param in step.signature.parameters.values():
                             if param.name not in ["prompt", "model"]:
                                 with ui.row():
@@ -103,27 +109,27 @@ def create_function_runner(step: MageStep):
                                         value=step.input_values[param.name]
                                     ).classes(textbox_style)
                     ui.label("Prompts:").style("margin-top: 20px; font-weight: bold;")
-                    with ui.column().style("margin-top: 20px;").classes("w-full"):
-                        with ui.row().classes("w-full"):
+                    with ui.column().style("margin-top: 20px;"):
+                        with ui.row():
                             ui.label("System:")
                             system_prompt_field = ui.textarea(
                                 value=(
                                     prompt.system if prompt else "No prompt supported"
                                 )
                             ).classes(textbox_style)
-                        with ui.row().classes("w-full"):
+                        with ui.row():
                             ui.label("User:")
                             user_prompt_field = ui.textarea(
                                 value=(prompt.user if prompt else "No prompt supported")
                             ).classes(textbox_style)
 
-                with ui.row().classes("w-full"):
+                with ui.row():
                     ui.button("Run", on_click=run_function).style("margin-top: 10px;")
                     ui.button("Save prompt", on_click=set_prompt).style(
                         "margin-top: 10px; margin-left: 10px;"
                     )
                 ui.separator()
-                with ui.row().classes("w-full overflow-y-auto"):
+                with ui.row():
                     ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
                     ui.button(
                         icon="content_copy",
@@ -131,10 +137,8 @@ def create_function_runner(step: MageStep):
                             step.result or "No result available"
                         ),
                     ).props("fab")
-                result_field = (
-                    ui.markdown(f"{step.result}" if step.result else "")
-                    .style("margin-top: 20px; color: blue;")
-                    .classes("w-full")
-                )
+                result_field = ui.markdown(
+                    f"{step.result}" if step.result else ""
+                ).style("margin-top: 20px; color: blue;")
 
     return build_ui

@@ -18,5 +18,5 @@ def frame(navigation_title: str, flow_name: str = None):
         ui.label(navigation_title).style("font-size: 1.5em;")
         ui.space()
         menu(flow_name=flow_name)
-    with ui.column().classes("self-center w-full"):
+    with ui.column().classes("self-center w-full gap-0"):
         yield
