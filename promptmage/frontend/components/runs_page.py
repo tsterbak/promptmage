@@ -37,10 +37,11 @@ def create_runs_view(mage: PromptMage):
                 ui.label(f"Status: {run_data.status}")
                 ui.label(f"Run Time: {run_data.run_time}")
                 ui.label(f"Prompt: {run_data.prompt}")
-                ui.label("Input Data:")
+                ui.label("Input Data:").classes("text-lg")
                 for key, value in run_data.input_data.items():
                     ui.markdown(f"**{key}**: {value}")
-                ui.label(f"Output Data: {run_data.output_data}")
+                ui.label("Output Data:").classes("text-lg")
+                ui.markdown(f"{run_data.output_data}")
                 with ui.row():
                     ui.button(
                         "Use in playground",
