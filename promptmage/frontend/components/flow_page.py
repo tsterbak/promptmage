@@ -11,8 +11,7 @@ def build_flow_page(flow: PromptMage):
         # Create a card for the mage
         with ui.column().classes("w-1/3 pr-5"):
             with ui.card().classes("w-full"):
-                ui.label(f"{flow.name}").classes("text-xl")
-                ui.label("Run all steps")
+                ui.label(f"Flow: {flow.name}").classes("text-xl")
                 create_main_runner(flow)()
         # Create a card for each step
         with ui.column().classes("w-2/3"):

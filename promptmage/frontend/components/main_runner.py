@@ -32,7 +32,8 @@ def create_main_runner(mage: PromptMage):
                             .style("padding-top: 0px;")
                         )
 
-            ui.button("Run", on_click=run_function).style("margin-top: 10px;")
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Run", on_click=run_function)
             ui.separator()
             with ui.row().classes("w-full"):
                 ui.button(
