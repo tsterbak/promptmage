@@ -36,6 +36,7 @@ def delete_dataset(dataset_id: str, flow: PromptMage):
 
 
 def create_grid(elements, flow, columns: int = 4):
+    elements.insert(0, None)
     rows = len(elements) // columns + (1 if len(elements) % columns > 0 else 0)
     if rows == 0:
         rows = 1

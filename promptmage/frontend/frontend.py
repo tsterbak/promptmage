@@ -13,6 +13,7 @@ from .components.prompts_page import create_prompts_view
 from .components.overview_page import build_overview_page
 from .components.flow_page import build_flow_page
 from .components.evaluation_page import build_evaluation_page
+from .components.dataset_page import build_dataset_page
 
 
 class PromptMageFrontend:
@@ -66,7 +67,7 @@ class PromptMageFrontend:
             with theme.frame(
                 f"Evaluation - {flow_name} - {dataset_id}", flow_name=flow_name
             ):
-                ui.label(f"Dataset ID: {dataset_id}")
+                build_dataset_page(self.current_flow, dataset_id)()
 
         ui.run_with(
             fastapi_app,

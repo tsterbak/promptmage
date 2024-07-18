@@ -251,7 +251,7 @@ class EvaluationDatapointModel(Base):
     dataset_id = Column(String, ForeignKey("evaluation_datasets.id"))
     dataset = relationship("EvaluationDatasetModel", back_populates="datapoints")
     run_data_id = Column(String, ForeignKey("data.step_run_id"))
-    rating = Column(Integer, nullable=True)
+    rating = Column(Integer, nullable=True, default=None)
 
     @classmethod
     def from_dict(cls, data: Dict) -> "EvaluationDatapointModel":
@@ -259,6 +259,7 @@ class EvaluationDatapointModel(Base):
             id=data["id"],
             dataset_id=data["dataset_id"],
             run_data_id=data["run_data_id"],
+            rating=data.get("rating"),
         )
 
     def to_dict(self) -> Dict:
@@ -266,10 +267,11 @@ class EvaluationDatapointModel(Base):
             "id": self.id,
             "dataset_id": self.dataset_id,
             "run_data_id": self.run_data_id,
+            "rating": self.rating,
         }
 
     def __repr__(self):
-        return f"EvaluationDatapointModel(id={self.id}, dataset_id={self.dataset_id}, run_data_id={self.run_data_id})"
+        return f"EvaluationDatapointModel(id={self.id}, dataset_id={self.dataset_id}, run_data_id={self.run_data_id}, rating={self.rating})"
 
 
 class SQLiteDataBackend(StorageBackend):
@@ -365,6 +367,20 @@ class SQLiteDataBackend(StorageBackend):
             datasets = session.execute(select(EvaluationDatasetModel)).scalars().all()
             logger.info(f"Datasets: {datasets}")
             return [d for d in datasets]
+        finally:
+            session.close()
+
+    def get_dataset(self, dataset_id: str) -> EvaluationDatasetModel:
+        session = self.Session()
+        try:
+            dataset = session.execute(
+                select(EvaluationDatasetModel).where(
+                    EvaluationDatasetModel.id == dataset_id
+                )
+            ).scalar_one_or_none()
+            if dataset is None:
+                raise ValueError(f"Dataset with ID {dataset_id} not found.")
+            return dataset
         finally:
             session.close()
 
