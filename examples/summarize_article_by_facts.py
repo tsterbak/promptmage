@@ -1,33 +1,23 @@
 import json
 from typing import List
-from dotenv import load_dotenv
 from openai import OpenAI
+from dotenv import load_dotenv
 
 from promptmage import PromptMage, Prompt
-from promptmage.storage import (
-    SQLitePromptBackend,
-    SQLiteDataBackend,
-    PromptStore,
-    DataStore,
-)
-
 
 load_dotenv()
 
 
-client = OpenAI(
-    # base_url="http://192.168.0.51:11434/v1",
-    # api_key="ollama",  # required, but unused
-)
+client = OpenAI()
 
 # Create a new PromptMage instance
 mage = PromptMage(
     name="fact-extraction",
-    available_models=["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
+    available_models=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
 )
 
 
-# Application code
+# Application code #
 
 
 @mage.step(name="extract", prompt_name="extract_facts", depends_on=None)
@@ -36,7 +26,7 @@ def extract_facts(
 ) -> List[str]:
     """Extract the facts as a bullet list from an article."""
     response = client.chat.completions.create(
-        model=model,  # "llama3:instruct",
+        model=model,
         messages=[
             {"role": "system", "content": prompt.system},
             {
@@ -59,7 +49,7 @@ def extract_facts(
 def check_facts(fact: str, prompt: Prompt) -> str:
     """Check the extracted facts for accuracy."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # "llama3:instruct",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt.system},
             {
@@ -80,7 +70,7 @@ def check_facts(fact: str, prompt: Prompt) -> str:
 def summarize_facts(check_results: str, prompt: Prompt) -> str:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # "llama3:instruct",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt.system},
             {
