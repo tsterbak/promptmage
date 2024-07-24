@@ -75,7 +75,6 @@ def create_function_runner(step: MageStep):
         if step.one_to_many:
             num_results = len(step.result)
             expansion_tab.props(f"caption='{num_results} results'")
-        input_output_section.ui().refresh()
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
 
