@@ -26,10 +26,14 @@ class InputOutputSection:
         for param in self.step.signature.parameters.values():
             if param.name not in ["prompt", "model"]:
                 with ui.row():
-                    ui.label(f"{param.name}:")
-                    self.fields[param.name] = ui.textarea(
-                        value=self.step.input_values[param.name]
-                    ).classes(textbox_style)
+                    self.fields[param.name] = (
+                        ui.textarea(
+                            label=f"{param.name}",
+                            value=self.step.input_values[param.name],
+                        )
+                        .classes(textbox_style)
+                        .props("outlined")
+                    )
 
 
 def create_function_runner(step: MageStep):
@@ -114,24 +118,36 @@ def create_function_runner(step: MageStep):
                 # show available models if available
                 if step.available_models:
                     with ui.row():
-                        ui.label("Select model:").style("margin-top: 20px;")
+                        ui.label("Select model:")
                         model_select = ui.select(
                             step.available_models,
                             label="Select model",
                             value=step.model,
                         )
-                with ui.row():
+                with ui.row().classes("w-full"):
                     ui.label("Prompts:").classes("font-bold")
-                    with ui.row():
-                        ui.label("System:")
-                        system_prompt_field = ui.textarea(
-                            value=(prompt.system if prompt else "No prompt supported")
-                        ).classes(textbox_style)
-                    with ui.row():
-                        ui.label("User:")
-                        user_prompt_field = ui.textarea(
-                            value=(prompt.user if prompt else "No prompt supported")
-                        ).classes(textbox_style)
+                    with ui.row().classes("grow"):
+                        system_prompt_field = (
+                            ui.textarea(
+                                label="System prompt:",
+                                value=(
+                                    prompt.system if prompt else "No prompt supported"
+                                ),
+                            )
+                            .classes(textbox_style)
+                            .props("outlined")
+                        )
+                    with ui.row().classes("grow"):
+                        user_prompt_field = (
+                            ui.textarea(
+                                label="User prompt:",
+                                value=(
+                                    prompt.user if prompt else "No prompt supported"
+                                ),
+                            )
+                            .classes(textbox_style)
+                            .props("outlined")
+                        )
                 with ui.row():
                     input_output_section.ui()
 
@@ -139,14 +155,14 @@ def create_function_runner(step: MageStep):
                     ui.button("Run", on_click=run_function)
                     ui.button("Save prompt", on_click=set_prompt)
                 ui.separator()
-                with ui.row():
+                with ui.row().classes("w-full justify-between"):
                     ui.label("Result:").classes("font-bold")
                     ui.button(
-                        icon="content_copy",
+                        "Copy to clipboard",
                         on_click=lambda: ui.clipboard.write(
                             step.result or "No result available"
                         ),
-                    ).props("fab")
+                    )
                 result_field = ui.markdown(
                     f"{step.result}" if step.result else ""
                 ).style("margin-top: 20px; color: blue;")

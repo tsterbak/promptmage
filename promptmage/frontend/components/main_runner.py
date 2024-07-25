@@ -1,12 +1,14 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 import inspect
+from contextlib import contextmanager
 from nicegui import ui, run
 
 from promptmage import PromptMage
 from .styles import textbox_style
 
 
+@contextmanager
 def create_main_runner(mage: PromptMage):
     input_fields = {}
     result_field = None
@@ -21,28 +23,33 @@ def create_main_runner(mage: PromptMage):
     def build_ui():
         nonlocal result_field
         with ui.column().classes("w-full"):
-            ui.label("Inputs:").style("margin-top: 20px; font-weight: bold;")
+            # elements before the steps runner
+            ui.label("Inputs:").classes("font-bold text-lg")
             for param in inspect.signature(flow_func).parameters.values():
                 if param.name not in ["prompt", "model"]:
                     with ui.row().classes("w-full"):
-                        ui.label(f"{param.name}:").style("width: 100px;")
                         input_fields[param.name] = (
-                            ui.textarea()
+                            ui.textarea(label=f"{param.name}")
                             .classes(textbox_style)
-                            .style("padding-top: 0px;")
+                            .props("outlined")
                         )
 
             with ui.row().classes("w-full justify-end"):
                 ui.button("Run", on_click=run_function)
             ui.separator()
-            with ui.row().classes("w-full"):
+            # steps runner
+            ui.label("Steps:").classes("font-bold text-lg")
+            yield
+            # elements after the steps runner
+            ui.separator()
+            with ui.row().classes("w-full justify-between"):
+                ui.label("Result:").classes("font-bold text-lg")
                 ui.button(
-                    icon="content_copy",
+                    "Copy to clipboard",
                     on_click=lambda: ui.clipboard.write(result_field.content),
-                ).props("fab")
-                ui.label("Result:").style("margin-top: 20px; font-weight: bold;")
+                )  # .props("fab")
             result_field = ui.markdown("").style(
-                "margin-top: 20px; color: blue; height: 200px; overflow-y: auto;"
+                "color: blue; height: 200px; overflow-y: auto;"
             )
 
-    return build_ui
+    return build_ui()
