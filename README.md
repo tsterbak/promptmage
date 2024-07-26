@@ -64,7 +64,7 @@ Contributing
 We welcome contributions from the community! If you're interested in improving PromptMage, you can contribute in the following ways:
 
 * **Reporting Bugs**: Submit an issue in our repository, providing a detailed description of the problem and steps to reproduce it.
-* **Feature Requests**: Have ideas on how to make FlowForge better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
+* **Feature Requests**: Have ideas on how to make PromptMage better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
 * **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
 
 
