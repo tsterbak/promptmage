@@ -5,6 +5,7 @@ from loguru import logger
 
 from .prompt import Prompt
 from .run_data import RunData
+from .result import MageResult
 from .storage import PromptStore, DataStore
 
 
@@ -20,6 +21,7 @@ class MageStep:
         data_store (DataStore): The data store to use for storing data.
         prompt_name (str): The name of the prompt associated with the step.
         depends_on (str): The name of the step that this step depends on.
+        initial (bool): Whether the step is an initial step.
         one_to_many (bool): Whether the step is a one-to-many step.
         many_to_one (bool): Whether the step is a many-to-one step.
         model (str): The model to use for the step.
@@ -35,6 +37,7 @@ class MageStep:
         data_store: DataStore,
         prompt_name: str | None = None,
         depends_on: str | None = None,
+        initial: bool = False,
         one_to_many: bool = False,
         many_to_one: bool = False,
         model: str | None = None,
@@ -49,6 +52,7 @@ class MageStep:
         self.data_store = data_store
         self.prompt_name = prompt_name
         self.depends_on = depends_on
+        self.initial = initial
         self.one_to_many = one_to_many
         self.many_to_one = many_to_one
         self.model = model
@@ -117,7 +121,7 @@ class MageStep:
                 self.result = self.func(**self.input_values)
             status = "success"
         except Exception as e:
-            self.result = f"Error: {e}"
+            self.result = MageResult(error=f"Error: {e}")
             status = "failed"
         # store the run data
         self.store_run(prompt=prompt, status=status)
@@ -153,7 +157,11 @@ class MageStep:
                     for k, v in self.input_values.items()
                     if k not in ["prompt", "model"]
                 },
-                output_data=self.result,
+                output_data=(
+                    [r.results for r in self.result]
+                    if isinstance(self.result, list)
+                    else self.result.results
+                ),
                 status=status,
                 model=self.model,
             )

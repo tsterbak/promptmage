@@ -1,13 +1,13 @@
 import inspect
 from loguru import logger
-from functools import wraps
+from functools import partial
 from collections import defaultdict, deque
 from typing import Dict, Callable, List
 
 
 # Local imports
 from .step import MageStep
-from .run_data import RunData
+from .result import MageResult
 from .storage import PromptStore, DataStore, SQLitePromptBackend, SQLiteDataBackend
 
 
@@ -52,6 +52,7 @@ class PromptMage:
         name: str,
         prompt_name: str | None = None,
         depends_on: List[str] | str | None = None,
+        initial: bool = False,
         one_to_many: bool = False,
         many_to_one: bool = False,
         pass_through_inputs: List[str] | None = None,
@@ -62,6 +63,7 @@ class PromptMage:
             name (str): The name of the step.
             prompt_name (str, optional): The name of the prompt to use for this step. Defaults to None.
             depends_on (str, optional): The name of the step that this step depends on. Defaults to None.
+            initial (bool): Whether this step is an initial step. Defaults to False.
             one_to_many (bool, optional): Whether this step is a one-to-many step. Defaults to False.
             many_to_one (bool, optional): Whether this step is a many-to-one step. Defaults to False.
             pass_through_inputs (List[str], optional): The list of inputs to pass through to the step that requires them. Defaults to None.
@@ -84,6 +86,7 @@ class PromptMage:
                 prompt_store=self.prompt_store,
                 data_store=self.data_store,
                 prompt_name=prompt_name,
+                initial=initial,
                 depends_on=depends_on,
                 one_to_many=one_to_many,
                 many_to_one=many_to_one,
@@ -145,7 +148,34 @@ class PromptMage:
                 "Cyclic dependency detected. This is currently not supported."
             )
 
-    def get_run_function(self, start_from=None) -> Callable:
+    def get_run_function(self, start_from: str | None = None) -> Callable:
+        """Returns a function that runs the PromptMage graph starting from the given step.
+
+        Args:
+            start_from (str, optional): The step to start the graph from. Defaults to None.
+        """
+        func_name = (
+            [step.name for step in self.steps.values() if step.initial][0]
+            if not start_from
+            else start_from
+        )
+        first_func_node: MageStep = self.steps[func_name]
+
+        def run_function(**initial_inputs):
+            current_result = first_func_node.execute(**initial_inputs)
+            while current_result.next_step:
+                current_step = self.steps[current_result.next_step]
+                current_result: MageResult = current_step.execute(
+                    **current_result.results
+                )
+            return current_result.results
+
+        # Set the signature of the returned function to match the first function in the graph
+        run_function.__signature__ = first_func_node.signature
+
+        return run_function
+
+    def get_run_function_old(self, start_from=None) -> Callable:
         """Returns a function that runs the PromptMage graph starting from the given step.
 
         It has the same signature as the first function in the graph and takes these inputs.

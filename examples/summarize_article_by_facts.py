@@ -3,7 +3,7 @@ from typing import List
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from promptmage import PromptMage, Prompt
+from promptmage import PromptMage, Prompt, MageResult
 
 load_dotenv()
 
@@ -20,7 +20,7 @@ mage = PromptMage(
 # Application code #
 
 
-@mage.step(name="extract", prompt_name="extract_facts", depends_on=None)
+@mage.step(name="extract", prompt_name="extract_facts", initial=True)
 def extract_facts(
     article: str, prompt: Prompt, model: str = "gpt-3.5-turbo"
 ) -> List[str]:
@@ -37,13 +37,14 @@ def extract_facts(
     )
     raw_facts = response.choices[0].message.content
     raw_facts = raw_facts.replace("```json", "").strip("```").strip()
-    return [str(f) for f in json.loads(raw_facts)]
+    return MageResult(
+        next_step="check_facts", fact=[str(f) for f in json.loads(raw_facts)]
+    )
 
 
 @mage.step(
     name="check_facts",
     prompt_name="check_facts",
-    depends_on="extract",
     one_to_many=True,
 )
 def check_facts(fact: str, prompt: Prompt) -> str:
@@ -58,13 +59,15 @@ def check_facts(fact: str, prompt: Prompt) -> str:
             },
         ],
     )
-    return f"Fact: {fact}\n\nCheck result: {response.choices[0].message.content}"
+    return MageResult(
+        next_step="summarize",
+        check_results=f"Fact: {fact}\n\nCheck result: {response.choices[0].message.content}",
+    )
 
 
 @mage.step(
     name="summarize",
     prompt_name="summarize_facts",
-    depends_on="check_facts",
     many_to_one=True,
 )
 def summarize_facts(check_results: str, prompt: Prompt) -> str:
@@ -79,4 +82,4 @@ def summarize_facts(check_results: str, prompt: Prompt) -> str:
             },
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(result=response.choices[0].message.content)
