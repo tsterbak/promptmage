@@ -23,7 +23,7 @@ mage = PromptMage(
 @mage.step(name="extract", prompt_name="extract_facts", initial=True)
 def extract_facts(
     article: str, prompt: Prompt, model: str = "gpt-3.5-turbo"
-) -> List[str]:
+) -> List[MageResult]:
     """Extract the facts as a bullet list from an article."""
     response = client.chat.completions.create(
         model=model,
@@ -37,17 +37,16 @@ def extract_facts(
     )
     raw_facts = response.choices[0].message.content
     raw_facts = raw_facts.replace("```json", "").strip("```").strip()
-    return MageResult(
-        next_step="check_facts", fact=[str(f) for f in json.loads(raw_facts)]
-    )
+    return [
+        MageResult(next_step="check_facts", fact=str(f)) for f in json.loads(raw_facts)
+    ]
 
 
 @mage.step(
     name="check_facts",
     prompt_name="check_facts",
-    one_to_many=True,
 )
-def check_facts(fact: str, prompt: Prompt) -> str:
+def check_facts(fact: str, prompt: Prompt) -> MageResult:
     """Check the extracted facts for accuracy."""
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -70,7 +69,7 @@ def check_facts(fact: str, prompt: Prompt) -> str:
     prompt_name="summarize_facts",
     many_to_one=True,
 )
-def summarize_facts(check_results: str, prompt: Prompt) -> str:
+def summarize_facts(check_results: str, prompt: Prompt) -> MageResult:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",

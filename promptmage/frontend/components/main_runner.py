@@ -9,7 +9,7 @@ from .styles import textbox_style
 
 
 @contextmanager
-def create_main_runner(mage: PromptMage):
+def create_main_runner(mage: PromptMage, execution_graph):
     input_fields = {}
     result_field = None
     flow_func = mage.get_run_function(start_from=None)
@@ -19,6 +19,7 @@ def create_main_runner(mage: PromptMage):
         result = await run.io_bound(flow_func, **inputs)
         result_field.set_content(f"{str(result)}")
         result_field.update()
+        execution_graph.refresh()
 
     def build_ui():
         nonlocal result_field

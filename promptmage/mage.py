@@ -47,6 +47,9 @@ class PromptMage:
         # store the pass_through_inputs
         self.pass_through_inputs = {}
 
+        # store execution results and details
+        self.execution_results = []
+
     def step(
         self,
         name: str,
@@ -149,6 +152,63 @@ class PromptMage:
             )
 
     def get_run_function(self, start_from: str | None = None) -> Callable:
+        initial_step_name = (
+            [step.name for step in self.steps.values() if step.initial][0]
+            if not start_from
+            else start_from
+        )
+        first_func_node: MageStep = self.steps[initial_step_name]
+
+        def run_function(**initial_inputs):
+            """
+            Execute steps starting from the initial step, following the next_step attribute.
+
+            Args:
+                **initial_inputs: The inputs for the initial step.
+            """
+
+            def execute_step(step_name: str, inputs: dict = None) -> MageResult:
+                """
+                Helper function to execute a step by its name.
+                """
+                logger.info(f"Executing step: {step_name}")
+                step = self.steps[step_name]
+                result = step.execute(**inputs)
+                self.execution_results.append(
+                    {
+                        "step": step_name,
+                        "result": result,
+                        "step_id": step.step_id,
+                        "next_step": (
+                            result[-1].next_step
+                            if isinstance(result, list)
+                            else result.next_step
+                        ),
+                    }
+                )
+
+                if isinstance(result, list):
+                    logger.info(f"Step: {step_name} returned multiple results.")
+                    for res in result:
+                        if res.next_step:
+                            return execute_step(res.next_step, res.results)
+                elif isinstance(result, MageResult) and result.next_step:
+                    logger.info(f"Executing next step: {result.next_step}")
+                    return execute_step(result.next_step, result.results)
+                elif isinstance(result, MageResult) and not result.next_step:
+                    logger.info("End of the path. Returning results.")
+                    return result
+                else:
+                    logger.error(f"Invalid result type for step: {step_name}")
+
+            # Start the execution from the initial step
+            return execute_step(initial_step_name, initial_inputs).results
+
+        # Set the signature of the returned function to match the first function in the graph
+        run_function.__signature__ = first_func_node.signature
+        return run_function
+
+    def get_run_function_deprecated(self, start_from: str | None = None) -> Callable:
         """Returns a function that runs the PromptMage graph starting from the given step.
 
         Args:
@@ -163,6 +223,8 @@ class PromptMage:
 
         def run_function(**initial_inputs):
             current_result = first_func_node.execute(**initial_inputs)
+            if isinstance(current_result, list):
+                pass
             while current_result.next_step:
                 current_step = self.steps[current_result.next_step]
                 current_result: MageResult = current_step.execute(

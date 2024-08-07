@@ -98,12 +98,15 @@ def create_function_runner(step: MageStep):
         expansion_tab.update()
 
     def update_results():
-        result_field.set_content(f"{step.result.results}")
+        if isinstance(step.result, list):
+            result_field.set_content(f"{[result.results for result in step.result]}")
+        else:
+            result_field.set_content(f"{step.result.results}")
         result_field.update()
 
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
-        if step.one_to_many:
-            num_results = len(step.result.results)
+        if isinstance(step.result, list):
+            num_results = len(step.result)
             expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.update()
 
