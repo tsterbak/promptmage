@@ -1,6 +1,5 @@
 import inspect
 from loguru import logger
-from functools import partial
 from collections import defaultdict, deque
 from typing import Dict, Callable, List
 
@@ -164,77 +163,104 @@ class PromptMage:
             Execute steps starting from the initial step, following the next_step attribute.
 
             Args:
-                **initial_inputs: The inputs for the initial step.
+                initial_inputs (dict): The inputs for the initial step.
             """
 
-            def execute_step(step_name: str, inputs: dict = None) -> MageResult:
+            def execute_graph(
+                step_name: str,
+                inputs: dict = None,
+            ) -> MageResult:
                 """
                 Helper function to execute a step by its name.
                 """
                 logger.info(f"Executing step: {step_name}")
-                step = self.steps[step_name]
-                result = step.execute(**inputs)
-                self.execution_results.append(
-                    {
-                        "step": step_name,
-                        "result": result,
-                        "step_id": step.step_id,
-                        "next_step": (
-                            result[-1].next_step
-                            if isinstance(result, list)
-                            else result.next_step
-                        ),
-                    }
-                )
+                current_node = step_name
+                current_data = inputs
 
-                if isinstance(result, list):
-                    logger.info(f"Step: {step_name} returned multiple results.")
-                    for res in result:
-                        if res.next_step:
-                            return execute_step(res.next_step, res.results)
-                elif isinstance(result, MageResult) and result.next_step:
-                    logger.info(f"Executing next step: {result.next_step}")
-                    return execute_step(result.next_step, result.results)
-                elif isinstance(result, MageResult) and not result.next_step:
-                    logger.info("End of the path. Returning results.")
-                    return result
-                else:
-                    logger.error(f"Invalid result type for step: {step_name}")
+                while current_node:
+                    logger.warning(f"Current node: {current_node}")
+                    # Get the current step
+                    step = self.steps[current_node]
 
-            # Start the execution from the initial step
-            return execute_step(initial_step_name, initial_inputs).results
+                    # store execution graph details
+                    self.execution_results.append(
+                        {
+                            "step": step.name,
+                            "result_id": step.step_id,
+                            "previous_step": current_node,
+                            "previous_result_id": step.step_id,
+                        }
+                    )
+
+                    # Execute the step
+                    if isinstance(current_data, list):
+                        current_data = combine_dicts(current_data)
+                    response = step.execute(**current_data)
+
+                    # Store the execution results
+                    if isinstance(response, list):
+                        result = [r.results for r in response]
+                        next_node = [r.next_step for r in response]
+                    elif isinstance(response, MageResult):
+                        next_node = response.next_step
+                        result = response.results
+                    else:
+                        raise ValueError(
+                            f"Step {current_node} returned an invalid response type."
+                        )
+
+                    if isinstance(next_node, list):  # Multiple next nodes
+                        if isinstance(result, list):
+                            logger.warning("Multiple next nodes and multiple results.")
+                            # Map the next_node to each result item
+                            current_node = next_node
+                            current_data = []
+                            next_node = None
+                            for r, n in zip(result, current_node):
+                                d, next_node = execute_graph(n, r)
+                                current_data.append(d)
+                            current_node = next_node
+                        else:
+                            logger.warning("Multiple next nodes and single result.")
+                            # Passing the single result to each next node
+                            current_node = next_node
+                            current_data = [execute_graph(n, result) for n in next_node]
+                            current_data = []
+                            next_node = None
+                            for n in current_node:
+                                d, next_node = execute_graph(n, result)
+                                current_data.append(d)
+                            current_node = next_node
+                    else:
+                        if isinstance(result, list):
+                            logger.warning("Single next node and multiple results.")
+                            current_node = next_node
+                            current_data = []
+                            next_node = None
+                            for r in result:
+                                d, next_node = execute_graph(current_node, r)
+                                current_data.append(d)
+                            current_node = next_node
+                        else:
+                            if next_node and self.steps[next_node].many_to_one:
+                                logger.warning(
+                                    "Single next node and many-to-one result."
+                                )
+                                current_data = result
+                                current_node = next_node
+                                break
+                            else:
+                                logger.warning("Single next node and single result.")
+                                current_node = next_node
+                                current_data = result
+
+                return current_data, current_node
+
+            final_result = execute_graph(initial_step_name, initial_inputs)
+            return final_result[0]
 
         # Set the signature of the returned function to match the first function in the graph
         run_function.__signature__ = first_func_node.signature
-        return run_function
-
-    def get_run_function_deprecated(self, start_from: str | None = None) -> Callable:
-        """Returns a function that runs the PromptMage graph starting from the given step.
-
-        Args:
-            start_from (str, optional): The step to start the graph from. Defaults to None.
-        """
-        func_name = (
-            [step.name for step in self.steps.values() if step.initial][0]
-            if not start_from
-            else start_from
-        )
-        first_func_node: MageStep = self.steps[func_name]
-
-        def run_function(**initial_inputs):
-            current_result = first_func_node.execute(**initial_inputs)
-            if isinstance(current_result, list):
-                pass
-            while current_result.next_step:
-                current_step = self.steps[current_result.next_step]
-                current_result: MageResult = current_step.execute(
-                    **current_result.results
-                )
-            return current_result.results
-
-        # Set the signature of the returned function to match the first function in the graph
-        run_function.__signature__ = first_func_node.signature
-
         return run_function
 
     def get_run_function_old(self, start_from=None) -> Callable:
@@ -313,3 +339,21 @@ class PromptMage:
             # filter by step_name
             return [run for run in runs if run.step_name in self.steps]
         return []
+
+
+def combine_dicts(list_of_dicts):
+    # Initialize a defaultdict where each key will hold a list of values
+    combined_dict = defaultdict(list)
+
+    # Iterate through each dictionary in the list
+    for d in list_of_dicts:
+        for key, value in d.items():
+            combined_dict[key].append(value)
+
+    # Convert lists with a single value back to that value
+    final_dict = {
+        key: (value[0] if len(value) == 1 else value)
+        for key, value in combined_dict.items()
+    }
+
+    return final_dict

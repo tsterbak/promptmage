@@ -1,4 +1,5 @@
 from nicegui import ui
+from loguru import logger
 
 from promptmage import PromptMage
 from promptmage.step import MageStep
@@ -9,16 +10,19 @@ from .step_runner import create_function_runner
 @ui.refreshable
 def execution_graph(flow: PromptMage):
     if flow.execution_results:
+        logger.info(flow.execution_results)
         graph = "graph TD;\n"
         graph_events = ""
         for step in flow.execution_results:
-            if step.get("next_step") is None:
-                graph += f'{step.get("step")} --> END;\n'
+            if step.get("previous_result_id") is None:
+                graph += f'START --> {step.get("result_id")}[{step.get("step")}];\n'
             else:
-                graph += f'{step.get("step")} --> {step.get("next_step")};\n'
-            graph_events += f'click {step.get("step")} call emitEvent("graph_click", "You clicked {step.get("step")}-{step.get("step_id")}!")\n'
+                graph += f'{step.get("previous_result_id")}[{step.get("previous_step")}] --> {step.get("result_id")}[{step.get("step")}];\n'
+            graph_events += f'click {step.get("result_id")} call emitEvent("graph_click", "You clicked {step.get("step")} with ID {step.get("id")}!")\n'
+        graph += f'{step.get("result_id")}[{step.get("step")}] --> END;\n'
         ui.mermaid(graph + graph_events, config={"securityLevel": "loose"})
         ui.on("graph_click", lambda e: ui.notify(e.args))
+        logger.info(graph)
     else:
         ui.spinner("puff", size="xl")
 
