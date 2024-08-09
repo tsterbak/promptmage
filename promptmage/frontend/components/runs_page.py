@@ -1,11 +1,14 @@
 from typing import List
 from loguru import logger
 from nicegui import ui, app
+from slugify import slugify
 
 from promptmage import PromptMage, RunData
 
 
 def create_runs_view(mage: PromptMage):
+
+    datasets = mage.data_store.backend.get_datasets()
 
     side_panel = ui.element("div").style(
         "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
@@ -15,7 +18,7 @@ def create_runs_view(mage: PromptMage):
 
     def use_run_in_playground(step_run_id):
         app.storage.user["step_run_id"] = step_run_id
-        ui.navigate.to("/")
+        ui.navigate.to(f"/{slugify(mage.name)}")
 
     # Function to show the side panel with detailed information
     def show_side_panel(run_data: RunData):
@@ -34,10 +37,11 @@ def create_runs_view(mage: PromptMage):
                 ui.label(f"Status: {run_data.status}")
                 ui.label(f"Run Time: {run_data.run_time}")
                 ui.label(f"Prompt: {run_data.prompt}")
-                ui.label("Input Data:")
+                ui.label("Input Data:").classes("text-lg")
                 for key, value in run_data.input_data.items():
                     ui.markdown(f"**{key}**: {value}")
-                ui.label(f"Output Data: {run_data.output_data}")
+                ui.label("Output Data:").classes("text-lg")
+                ui.markdown(f"{run_data.output_data}")
                 with ui.row():
                     ui.button(
                         "Use in playground",
@@ -116,11 +120,34 @@ def create_runs_view(mage: PromptMage):
                 ui.button("Close", on_click=compare_dialog.close)
             compare_dialog.open()
 
+        def add_to_dataset():
+            if dataset_select.value is None:
+                ui.notify("Please select a dataset to add the runs to.")
+                return
+            dataset = datasets[dataset_select.value]
+            selected_runs = table.selected
+            for run in selected_runs:
+                mage.data_store.backend.add_datapoint_to_dataset(
+                    run["step_run_id"], dataset.id
+                )
+                logger.info(f"Added run {run['step_run_id']} to dataset {dataset.id}")
+            ui.notify(
+                f"Added {len(selected_runs)} runs to dataset {dataset.name} successfully."
+            )
+
         # Main UI setup
         with ui.card().style("padding: 20px"):
-            ui.button("Compare Runs", on_click=display_comparison).style(
-                "margin-bottom: 20px"
-            )
+            with ui.row():
+                ui.button("Compare Runs", on_click=display_comparison).style(
+                    "margin-bottom: 20px"
+                )
+                ui.button("Add to dataset", on_click=add_to_dataset).style(
+                    "margin-bottom: 20px"
+                )
+                dataset_select = ui.select(
+                    {idx: f"{d.name}-{d.id}" for idx, d in enumerate(datasets)},
+                    value=None,
+                )
             # Create a table with clickable rows
             columns = [
                 {

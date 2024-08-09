@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "promptmage"
-version = "0.0.4"
+version = "0.1.0"
 description = "\"PromptMage\" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution."
 authors = ["Tobias Sterbak <github@tobiassterbak.com>"]
 license = "MIT"
@@ -22,6 +22,8 @@ uvicorn = {extras = ["standard"], version = "^0.29.0"}
 setuptools = "^69.5.1"
 nicegui = "^1.4.25"
 fastapi = ">=0.109.1,<0.110.0"
+sqlalchemy = "^2.0.31"
+python-slugify = "^8.0.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

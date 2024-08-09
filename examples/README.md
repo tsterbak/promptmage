@@ -8,6 +8,8 @@ This repository contains examples for using PromptMage in your application or wo
 
 - Answer questions about YouTube videos: A multi-step LLM application that extracts information from a YouTube video and answers questions about the video. [View Example](https://github.com/tsterbak/promptmage/blob/main/examples/youtube_understanding.py)
 
+- Multi-flow example: An example that demonstrates how to use multiple flows in a single application. [View Example](https://github.com/tsterbak/promptmage/blob/main/examples/multiflow.py)
+
 
 ## Getting Started
 
