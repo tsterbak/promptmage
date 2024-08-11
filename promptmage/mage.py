@@ -198,6 +198,7 @@ class PromptMage:
                                     "previous_result_ids": previous_result_ids,
                                     "current_result_id": res.id,
                                     "step": step.name,
+                                    "results": res.results,
                                 }
                             )
                         previous_result_ids = [res.id for res in response]
@@ -207,6 +208,7 @@ class PromptMage:
                                 "previous_result_ids": previous_result_ids,
                                 "current_result_id": response.id,
                                 "step": step.name,
+                                "results": response.results,
                             }
                         )
                         previous_result_ids = [response.id]

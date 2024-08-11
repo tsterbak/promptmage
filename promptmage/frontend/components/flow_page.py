@@ -15,9 +15,11 @@ def render_mermaid_diagram(execution_list: list) -> str:
         str: The Mermaid diagram code.
     """
     diagram = ["graph TD"]
+    graph_events = ""
     all_nodes = set()  # To keep track of all nodes
     nodes_with_outgoing_edges = set()  # To track nodes with outgoing edges
     id_to_step_name = {}  # Mapping of result_id to step name
+    id_to_result = {}  # Mapping of result_id to result
 
     for result in execution_list:
         previous_ids = result["previous_result_ids"]
@@ -27,11 +29,17 @@ def render_mermaid_diagram(execution_list: list) -> str:
         # Store the mapping from id to step name
         id_to_step_name[current_id] = step_name
 
+        # Store the mapping from id to result
+        id_to_result[current_id] = result["results"]
+
         all_nodes.add(current_id)
 
         if previous_ids:
             for prev_id in previous_ids:
                 diagram.append(f"    {prev_id} --> {current_id}")
+                graph_events += (
+                    f'click {prev_id} call emitEvent("graph_click", {prev_id})\n'
+                )
                 all_nodes.add(prev_id)
                 nodes_with_outgoing_edges.add(prev_id)
         else:
@@ -43,24 +51,36 @@ def render_mermaid_diagram(execution_list: list) -> str:
 
     # Add 'END' for terminal nodes
     for node in terminal_nodes:
+        graph_events += f'click {node} call emitEvent("graph_click", {node})\n'
         diagram.append(f"    {node} --> END")
 
     # Add labels for nodes using their step names
     for node_id, step_name in id_to_step_name.items():
         diagram.append(f"    {node_id}({step_name})")
 
-    return "\n".join(diagram)
+    return "\n".join(diagram) + "\n" + graph_events, id_to_step_name, id_to_result
 
 
 @ui.refreshable
 def execution_graph(flow: PromptMage):
+    with ui.dialog() as dialog, ui.card():
+        ui.label("Execution Result.")
+
     if flow.execution_results:
         logger.info(flow.execution_results)
-        graph = render_mermaid_diagram(flow.execution_results)
-        #    graph_events += f'click {step.get("step_id")} call emitEvent("graph_click", "You clicked {step.get("step")} with ID {step.get("current_result_id")}!")\n'
-        # graph += f'{step.get("current_result_id")}[{step.get("step")}] --> END;\n'
+        graph, id_to_step_name, id_to_result = render_mermaid_diagram(
+            flow.execution_results
+        )
+
+        def node_dialog(id: str):
+            dialog.clear()
+            with dialog, ui.card().classes("w-64 h-64"):
+                ui.label(id_to_step_name[id])
+                ui.markdown(str(id_to_result[id]))
+            dialog.open()
+
         ui.mermaid(graph, config={"securityLevel": "loose"})
-        ui.on("graph_click", lambda e: ui.notify(e.args))
+        ui.on("graph_click", lambda e: node_dialog(e.args))
         logger.info(graph)
     else:
         ui.spinner("puff", size="xl")
