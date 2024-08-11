@@ -168,7 +168,8 @@ class PromptMage:
 
             def execute_graph(
                 step_name: str,
-                inputs: dict = None,
+                inputs: dict | None = None,
+                previous_result_ids: List | None = None,
             ) -> MageResult:
                 """
                 Helper function to execute a step by its name.
@@ -182,33 +183,45 @@ class PromptMage:
                     # Get the current step
                     step = self.steps[current_node]
 
-                    # store execution graph details
-                    self.execution_results.append(
-                        {
-                            "step": step.name,
-                            "result_id": step.step_id,
-                            "previous_step": current_node,
-                            "previous_result_id": step.step_id,
-                        }
-                    )
-
                     # Execute the step
                     if isinstance(current_data, list):
                         current_data = combine_dicts(current_data)
                     response = step.execute(**current_data)
 
+                    # Store current and previous result ids
+                    if previous_result_ids is None:
+                        previous_result_ids = []
+                    if isinstance(response, list):
+                        for res in response:
+                            self.execution_results.append(
+                                {
+                                    "previous_result_ids": previous_result_ids,
+                                    "current_result_id": res.id,
+                                    "step": step.name,
+                                }
+                            )
+                        previous_result_ids = [res.id for res in response]
+                    else:
+                        self.execution_results.append(
+                            {
+                                "previous_result_ids": previous_result_ids,
+                                "current_result_id": response.id,
+                                "step": step.name,
+                            }
+                        )
+                        previous_result_ids = [response.id]
+
                     # Store the execution results
                     if isinstance(response, list):
-                        result = [r.results for r in response]
+                        result = response
                         next_node = [r.next_step for r in response]
                     elif isinstance(response, MageResult):
                         next_node = response.next_step
-                        result = response.results
+                        result = response
                     else:
                         raise ValueError(
                             f"Step {current_node} returned an invalid response type."
                         )
-
                     if isinstance(next_node, list):  # Multiple next nodes
                         if isinstance(result, list):
                             logger.warning("Multiple next nodes and multiple results.")
@@ -216,19 +229,39 @@ class PromptMage:
                             current_node = next_node
                             current_data = []
                             next_node = None
+                            previous_result_ids_list = []
                             for r, n in zip(result, current_node):
-                                d, next_node = execute_graph(n, r)
+                                d, next_node, previous_result_idx = execute_graph(
+                                    step_name=n,
+                                    inputs=r.results,
+                                    previous_result_ids=[r.id],
+                                )
                                 current_data.append(d)
+                                previous_result_ids_list.append(previous_result_idx)
+                            previous_result_ids = [
+                                id for ids in previous_result_ids_list for id in ids
+                            ]
                             current_node = next_node
                         else:
                             logger.warning("Multiple next nodes and single result.")
                             # Passing the single result to each next node
                             current_node = next_node
-                            current_data = [execute_graph(n, result) for n in next_node]
+                            current_data = [
+                                execute_graph(
+                                    step_name=n,
+                                    inputs=result.results,
+                                    previous_result_ids=previous_result_ids,
+                                )[0]
+                                for n in next_node
+                            ]
                             current_data = []
                             next_node = None
                             for n in current_node:
-                                d, next_node = execute_graph(n, result)
+                                d, next_node, previous_result_ids = execute_graph(
+                                    step_name=n,
+                                    inputs=result.results,
+                                    previous_result_ids=previous_result_ids,
+                                )
                                 current_data.append(d)
                             current_node = next_node
                     else:
@@ -238,7 +271,11 @@ class PromptMage:
                             current_data = []
                             next_node = None
                             for r in result:
-                                d, next_node = execute_graph(current_node, r)
+                                d, next_node, previous_result_ids = execute_graph(
+                                    step_name=current_node,
+                                    inputs=r.results,
+                                    previous_result_ids=[r.id],
+                                )
                                 current_data.append(d)
                             current_node = next_node
                         else:
@@ -246,18 +283,22 @@ class PromptMage:
                                 logger.warning(
                                     "Single next node and many-to-one result."
                                 )
-                                current_data = result
+                                current_data = result.results
                                 current_node = next_node
                                 break
                             else:
                                 logger.warning("Single next node and single result.")
                                 current_node = next_node
-                                current_data = result
+                                current_data = result.results
 
-                return current_data, current_node
+                return (
+                    current_data,
+                    current_node,
+                    previous_result_ids if previous_result_ids else None,
+                )
 
-            final_result = execute_graph(initial_step_name, initial_inputs)
-            return final_result[0]
+            final_result, _, _ = execute_graph(initial_step_name, initial_inputs)
+            return final_result
 
         # Set the signature of the returned function to match the first function in the graph
         run_function.__signature__ = first_func_node.signature
