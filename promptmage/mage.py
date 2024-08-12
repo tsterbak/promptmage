@@ -165,6 +165,7 @@ class PromptMage:
             Args:
                 initial_inputs (dict): The inputs for the initial step.
             """
+            self.execution_results = []
 
             def execute_graph(
                 step_name: str,
