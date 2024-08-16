@@ -5,7 +5,7 @@ This example demonstrates how to use PromptMage with Docker.
 ## Prerequisites
 
 - Install docker
-- Add .env file with the api keys you need
+- Add .env file with the api keys you need. You can use the .env.example file as a template.
 
 ## Usage
 
