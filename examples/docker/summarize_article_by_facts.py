@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from promptmage import PromptMage, Prompt
+from promptmage import PromptMage, Prompt, MageResult
 from promptmage.storage import (
     SQLitePromptBackend,
     SQLiteDataBackend,
@@ -29,7 +29,7 @@ mage = PromptMage(
 # Application code
 
 
-@mage.step(name="extract", prompt_name="extract_facts", depends_on=None)
+@mage.step(name="extract", prompt_name="extract_facts", initial=True)
 def extract_facts(article: str, prompt: Prompt) -> str:
     """Extract the facts as a bullet list from an article."""
     response = client.chat.completions.create(
@@ -42,10 +42,10 @@ def extract_facts(article: str, prompt: Prompt) -> str:
             },
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(next_step="summarize", facts=response.choices[0].message.content)
 
 
-@mage.step(name="summarize", prompt_name="summarize_facts", depends_on="extract")
+@mage.step(name="summarize", prompt_name="summarize_facts")
 def summarize_facts(facts: str, prompt: Prompt) -> str:
     """Summarize the given facts as a single sentence."""
     response = client.chat.completions.create(
@@ -58,4 +58,4 @@ def summarize_facts(facts: str, prompt: Prompt) -> str:
             },
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(summary=response.choices[0].message.content)
