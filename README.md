@@ -9,10 +9,18 @@
   <p align="center">
     simplifies the process of creating and managing LLM workflows as a self-hosted solution.
   </p>
+  
   [![License](https://img.shields.io/github/license/tsterbak/promptmage?color=green)](https://github.com/tsterbak/promptmage/blob/main/LICENSE)
-  [![pypi](https://img.shields.io/pypi/v/promptmage)](https://pypi.org/project/promptmage/)
-  [![Downloads](https://pepy.tech/badge/promptmage)](https://pepy.tech/project/promptmage)
+  [![Monthly downloads](https://img.shields.io/pypi/dm/promptmage
+)](https://pypi.org/project/promptmage/)
+  [![PyPI version](https://img.shields.io/pypi/v/promptmage)](https://pypi.org/project/promptmage/)
+  [![GitHub issues](https://img.shields.io/github/issues/tsterbak/promptmage)](https://github.com/tsterbak/promptmage/issues)
+  [![GitHub stars](https://img.shields.io/github/stars/tsterbak/promptmage)](https://github.com/tsterbak/promptmage/stargazers)
 </div>
+
+> [!WARNING]
+> This application is currently in alpha state and under active development. Please be aware that the API and features may change at any time.
+
 
 ## About the Project
 
@@ -74,6 +82,7 @@ We welcome contributions from the community! If you're interested in improving P
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+Original development by [Tobias Sterbak](https://tobiassterbak.com). Copyright (C) 2024.
 
 ## Contact
 For any inquiries or further information, feel free to reach out at [promptmage@tobiassterbak.com](mailto:promptmage@tobiassterbak.com).
