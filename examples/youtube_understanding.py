@@ -3,7 +3,7 @@ from openai import OpenAI
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
-from promptmage import PromptMage, Prompt
+from promptmage import PromptMage, Prompt, MageResult
 from promptmage.storage import (
     SQLitePromptBackend,
     SQLiteDataBackend,
@@ -27,7 +27,7 @@ mage = PromptMage(
 )
 
 
-@mage.step(name="get-transcript", depends_on=None, pass_through_inputs=["question"])
+@mage.step(name="get-transcript", initial=True)
 def get_transcript(video_id: str, question: str) -> str:
     """Get the transcript of a YouTube video.
 
@@ -35,48 +35,54 @@ def get_transcript(video_id: str, question: str) -> str:
     """
     transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["de"])
     transcript_text = TextFormatter().format_transcript(transcript)
-    return transcript_text
+    return MageResult(
+        next_step=["create-outline", "extract-facts"],
+        transcript=transcript_text,
+        question=question,
+    )
 
 
-@mage.step(
-    name="create-outline", prompt_name="create-outline", depends_on="get-transcript"
-)
-def create_outline(transcript: str, prompt: Prompt) -> str:
+@mage.step(name="create-outline", prompt_name="create-outline")
+def create_outline(transcript: str, question: str, prompt: Prompt) -> str:
     """Create an outline from the transcript of a YouTube video."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": prompt.system},
             {"role": "user", "content": prompt.user.format(transcript=transcript)},
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(
+        next_step="answer-question",
+        outline=response.choices[0].message.content,
+        question=question,
+    )
 
 
-@mage.step(
-    name="extract-facts", prompt_name="extract-facts", depends_on="get-transcript"
-)
-def extract_facts(transcript: str, prompt: Prompt) -> str:
+@mage.step(name="extract-facts", prompt_name="extract-facts")
+def extract_facts(transcript: str, question: str, prompt: Prompt) -> str:
     """Extract facts from the transcript of a YouTube video."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": prompt.system},
             {"role": "user", "content": prompt.user.format(transcript=transcript)},
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(
+        next_step="answer-question",
+        facts=response.choices[0].message.content,
+    )
 
 
 @mage.step(
     name="answer-question",
     prompt_name="answer-question",
-    depends_on=["create-outline", "extract-facts"],
 )
 def answer_question(outline: str, facts: str, question: str, prompt: Prompt) -> str:
     """Answer a question based on the outline of a YouTube video."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": prompt.system},
             {
@@ -87,4 +93,4 @@ def answer_question(outline: str, facts: str, question: str, prompt: Prompt) -> 
             },
         ],
     )
-    return response.choices[0].message.content
+    return MageResult(answer=response.choices[0].message.content)

@@ -1,9 +1,11 @@
 """This ui element represent the input, prompt and output of a callable step in the PromptMage."""
 
 from nicegui import ui, run, app
+from typing import List
 from loguru import logger
 
 from promptmage.mage import MageStep
+from .styles import textbox_style
 
 
 RUNNING_ICON = "run_circle"
@@ -11,17 +13,38 @@ NOT_RUNNING_ICON = "circle"
 SUCCESS_RUN_ICON = "check_circle"
 
 
+class InputOutputSection:
+
+    def __init__(self, step: MageStep):
+        self.step = step
+
+        self.fields = {}
+
+    @ui.refreshable
+    def ui(self):
+        ui.label("Inputs:").classes("font-bold")
+        for param in self.step.signature.parameters.values():
+            if param.name not in ["prompt", "model"]:
+                with ui.row():
+                    self.fields[param.name] = (
+                        ui.textarea(
+                            label=f"{param.name}",
+                            value=self.step.input_values[param.name],
+                        )
+                        .classes(textbox_style)
+                        .props("outlined")
+                    )
+
+
 def create_function_runner(step: MageStep):
-    input_fields = {}
+    input_output_section = InputOutputSection(step)
     system_prompt_field = None
     user_prompt_field = None
     model_select = None
     result_field = None
-    expansion_tab = (
-        ui.expansion(f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}")
-        .classes("w-full")
-        .style("width: 650px;")
-    )
+    expansion_tab = ui.expansion(
+        f"Step: {step.name}", group="steps", icon=f"{NOT_RUNNING_ICON}"
+    ).classes("text-lg w-full border")
     # load prompt if available
     if step.prompt_name:
         prompt = step.get_prompt()
@@ -41,16 +64,21 @@ def create_function_runner(step: MageStep):
             del app.storage.user["step_run_id"]
 
     async def run_function():
-        expansion_tab.props("icon=run_circle")
+        expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
-        inputs = {name: field.value for name, field in input_fields.items()}
+        inputs = {
+            name: field.value for name, field in input_output_section.fields.items()
+        }
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
-        result = await run.io_bound(step.execute, **inputs)
+        _ = await run.io_bound(step.execute, **inputs)
+        if step.one_to_many:
+            num_results = len(step.result.results)
+            expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
         expansion_tab.update()
 
@@ -63,17 +91,26 @@ def create_function_runner(step: MageStep):
         step.set_prompt(prompt)
 
     def update_inputs():
-        for name, field in input_fields.items():
+        for name, field in input_output_section.fields.items():
             field.set_value(step.input_values[name])
             field.update()
         expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
 
     def update_results():
-        result_field.set_content(f"{step.result}")
+        newline = "\n\n"
+        if isinstance(step.result, list):
+            result_field.set_content(
+                f"{[newline.join(result.results.values()) for result in step.result]}"
+            )
+        else:
+            result_field.set_content(f"{newline.join(step.result.results.values())}")
         result_field.update()
 
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")
+        if isinstance(step.result, list):
+            num_results = len(step.result)
+            expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.update()
 
     step.on_input_change(update_inputs)
@@ -82,82 +119,58 @@ def create_function_runner(step: MageStep):
     def build_ui():
         nonlocal user_prompt_field, system_prompt_field, result_field, expansion_tab, model_select
         with expansion_tab:
-            with ui.card():
-                ui.label(f"{step.name} - {step.step_id}")
-                with ui.column().style(
-                    "border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; width: 1000px; height: 700px; overflow-y: auto;"
-                ):
-                    ui.label("Step Runner").style(
-                        "font-weight: bold; font-size: 1.5em;"
-                    )
-                    # show available models if available
-                    if step.available_models:
-                        with ui.row():
-                            ui.label("Select model:").style("margin-top: 20px;")
-                            model_select = ui.select(
-                                step.available_models,
-                                label="Select model",
-                                value=step.model,
+            ui.label(f"ID: {step.step_id}")
+            with ui.column().classes("w-full"):
+                # show available models if available
+                if step.available_models:
+                    with ui.row():
+                        ui.label("Select model:")
+                        model_select = ui.select(
+                            step.available_models,
+                            label="Select model",
+                            value=step.model,
+                        )
+                with ui.row().classes("w-full"):
+                    ui.label("Prompts:").classes("font-bold")
+                    with ui.row().classes("grow"):
+                        system_prompt_field = (
+                            ui.textarea(
+                                label="System prompt:",
+                                value=(
+                                    prompt.system if prompt else "No prompt supported"
+                                ),
                             )
-                    with ui.row():
-                        ui.label("Inputs:").style(
-                            "margin-top: 20px; font-weight: bold;"
+                            .classes(textbox_style)
+                            .props("outlined")
                         )
-                        with ui.column().style("flex-grow: 1; margin-top: 20px;"):
-                            for param in step.signature.parameters.values():
-                                if param.name not in ["prompt", "model"]:
-                                    with ui.row():
-                                        ui.label(f"{param.name}:").style(
-                                            "width: 100px;"
-                                        )
-                                        input_fields[param.name] = ui.textarea(
-                                            value=step.input_values[param.name]
-                                        ).style("flex-grow: 1; overflow: auto;")
-                        ui.label("Prompts:").style(
-                            "margin-top: 20px; font-weight: bold;"
+                    with ui.row().classes("grow"):
+                        user_prompt_field = (
+                            ui.textarea(
+                                label="User prompt:",
+                                value=(
+                                    prompt.user if prompt else "No prompt supported"
+                                ),
+                            )
+                            .classes(textbox_style)
+                            .props("outlined")
                         )
-                        with ui.column().style("flex-grow: 1; margin-top: 20px;"):
-                            with ui.row():
-                                ui.label("System:").style("width: 100px;")
-                                system_prompt_field = ui.textarea(
-                                    value=(
-                                        prompt.system
-                                        if prompt
-                                        else "No prompt supported"
-                                    )
-                                ).style(
-                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
-                                )
-                            with ui.row():
-                                ui.label("User:").style("width: 100px;")
-                                user_prompt_field = ui.textarea(
-                                    value=(
-                                        prompt.user if prompt else "No prompt supported"
-                                    )
-                                ).style(
-                                    "flex-grow: 1; overflow: auto; width: 400px; height: 200px;"
-                                )
+                with ui.row():
+                    input_output_section.ui()
 
-                    with ui.row():
-                        ui.button("Run", on_click=run_function).style(
-                            "margin-top: 10px;"
-                        )
-                        ui.button("Save prompt", on_click=set_prompt).style(
-                            "margin-top: 10px; margin-left: 10px;"
-                        )
-                    ui.separator()
-                    with ui.row():
-                        ui.label("Result:").style(
-                            "margin-top: 20px; font-weight: bold;"
-                        )
-                        ui.button(
-                            icon="content_copy",
-                            on_click=lambda: ui.clipboard.write(
-                                step.result or "No result available"
-                            ),
-                        ).props("fab")
-                    result_field = ui.markdown(
-                        f"{step.result}" if step.result else ""
-                    ).style("margin-top: 20px; color: blue; height: 200px;")
+                with ui.row().classes("w-full justify-end"):
+                    ui.button("Run", on_click=run_function)
+                    ui.button("Save prompt", on_click=set_prompt)
+                ui.separator()
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("Result:").classes("font-bold")
+                    ui.button(
+                        "Copy to clipboard",
+                        on_click=lambda: ui.clipboard.write(
+                            step.result or "No result available"
+                        ),
+                    )
+                result_field = ui.markdown(
+                    f"{step.result}" if step.result else ""
+                ).style("margin-top: 20px; color: blue;")
 
     return build_ui

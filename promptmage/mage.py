@@ -1,15 +1,13 @@
-import uuid
 import inspect
 from loguru import logger
-from functools import wraps
 from collections import defaultdict, deque
 from typing import Dict, Callable, List
 
 
 # Local imports
-from .prompt import Prompt
-from .run_data import RunData
-from .storage import PromptStore, DataStore
+from .step import MageStep
+from .result import MageResult
+from .storage import PromptStore, DataStore, SQLitePromptBackend, SQLiteDataBackend
 
 
 class PromptMage:
@@ -30,10 +28,14 @@ class PromptMage:
         available_models: List[str] | None = None,
     ):
         self.name: str = name
-        self.prompt_store = prompt_store
-        self.data_store = data_store
+        self.prompt_store = (
+            prompt_store if prompt_store else PromptStore(backend=SQLitePromptBackend())
+        )
+        self.data_store = (
+            data_store if data_store else DataStore(backend=SQLiteDataBackend())
+        )
         self.available_models = available_models
-        self.steps: Dict = {}
+        self.steps: Dict[str, MageStep] = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
         # store the dependency graph
@@ -41,14 +43,23 @@ class PromptMage:
         self.graph = defaultdict(list)
         self.indegree = defaultdict(int)
 
-        # store pass_through_inputs
+        # store the pass_through_inputs
         self.pass_through_inputs = {}
+
+        # store execution results and details
+        self.execution_results = []
+
+        # store the running status
+        self.is_running = False
 
     def step(
         self,
         name: str,
         prompt_name: str | None = None,
         depends_on: List[str] | str | None = None,
+        initial: bool = False,
+        one_to_many: bool = False,
+        many_to_one: bool = False,
         pass_through_inputs: List[str] | None = None,
     ) -> Callable:
         """Decorator to add a step to the PromptMage instance.
@@ -57,84 +68,33 @@ class PromptMage:
             name (str): The name of the step.
             prompt_name (str, optional): The name of the prompt to use for this step. Defaults to None.
             depends_on (str, optional): The name of the step that this step depends on. Defaults to None.
+            initial (bool): Whether this step is an initial step. Defaults to False.
+            one_to_many (bool, optional): Whether this step is a one-to-many step. Defaults to False.
+            many_to_one (bool, optional): Whether this step is a many-to-one step. Defaults to False.
             pass_through_inputs (List[str], optional): The list of inputs to pass through to the step that requires them. Defaults to None.
+
+        One-to-many steps are steps that are expected to return Iterable outputs. Following steps will be executed for each output.
+        Many-to-one steps are steps that are expected to receive Iterable inputs. The step will be executed on all inputs together.
         """
+        assert not (
+            one_to_many and many_to_one
+        ), "Cannot be both one-to-many and many-to-one."
 
         def decorator(func):
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                logger.info(f"Running step: {name}...")
-                status = "running"
-                logger.info(f"Step input: {args}, {kwargs}")
-                sig = inspect.signature(func)
-
-                # Get the prompt from the backend if it exists.
-                if prompt_name is not None:
-                    prompt = self.prompt_store.get_prompt(prompt_name)
-                    # extract the template variables from the function signature
-                    if prompt.template_vars == []:
-                        prompt.template_vars = [
-                            param
-                            for param in sig.parameters
-                            if param not in ["prompt", "model"]
-                        ]
-                        # Store the updated prompt
-                        self.prompt_store.store_prompt(prompt)
-                    # Add the prompt to the kwargs
-                    kwargs["prompt"] = prompt
-                # Store the pass_through_inputs
-                if pass_through_inputs:
-                    logger.info(f"Storing pass_through_inputs: {pass_through_inputs}")
-                    for var_name in pass_through_inputs:
-                        if var_name in kwargs:
-                            self.pass_through_inputs[var_name] = kwargs[var_name]
-                    logger.info(
-                        f"Stored pass_through_inputs: {self.pass_through_inputs}"
-                    )
-                # retrieve the pass_through_inputs if they exist
-                for var_name, value in self.pass_through_inputs.items():
-                    logger.info(
-                        f"Retrieving pass_through_input: {var_name} with value: {value}"
-                    )
-                    if var_name in sig.parameters and kwargs.get(var_name) is None:
-                        logger.info(
-                            f"Retrieving pass_through_input: {var_name} with value: {value}"
-                        )
-                        kwargs[var_name] = value
-                try:
-                    results = func(*args, **kwargs)
-                    status = "success"
-                except KeyError as e:
-                    results = f"Error: {e}"
-                    status = "failed"
-
-                # Store input and output data
-                if self.data_store:
-                    run_data = RunData(
-                        step_name=name,
-                        prompt=prompt if prompt_name else None,
-                        input_data={
-                            k: v
-                            for k, v in kwargs.items()
-                            if k not in ["prompt", "model"]
-                        },
-                        output_data=results,
-                        status=status,
-                        model=kwargs.get("model", None),
-                    )
-                    self.data_store.store_data(run_data)
-                logger.info(f"Step output: {results}")
-                return results
-
+            # get the function signature
             func_params = inspect.signature(func).parameters
+
+            # create and store the step
             self.steps[name] = MageStep(
                 name=name,
-                func=wrapper,
+                func=func,
                 prompt_store=self.prompt_store,
                 data_store=self.data_store,
                 prompt_name=prompt_name,
+                initial=initial,
                 depends_on=depends_on,
+                one_to_many=one_to_many,
+                many_to_one=many_to_one,
                 available_models=(
                     self.available_models if func_params.get("model") else None
                 ),
@@ -153,83 +113,182 @@ class PromptMage:
             else:
                 self.dependencies[name] = []
 
-            return wrapper
+            return func
 
         return decorator
 
-    def _build_dependency_graph(self):
-        # Build the graph and compute in-degrees of each node
-        self.graph.clear()
-        self.indegree.clear()
-
-        for func_id, deps in self.dependencies.items():
-            for dep in deps:
-                self.graph[dep].append(func_id)
-                self.indegree[func_id] += 1
-            if func_id not in self.indegree:
-                self.indegree[func_id] = 0
-
-    def topological_sort(self):
-        order = []
-        queue = deque([node for node in self.indegree if self.indegree[node] == 0])
-
-        while queue:
-            node = queue.popleft()
-            order.append(node)
-            for neighbor in self.graph[node]:
-                self.indegree[neighbor] -= 1
-                if self.indegree[neighbor] == 0:
-                    queue.append(neighbor)
-
-        if len(order) == len(self.indegree):
-            return order
-        else:
-            raise ValueError(
-                "Cyclic dependency detected. This is currently not supported."
-            )
-
-    def get_run_function(self, start_from=None) -> Callable:
-        """Returns a function that runs the PromptMage graph starting from the given step.
-
-        It has the same signature as the first function in the graph and takes these inputs.
-        """
-        self._build_dependency_graph()
-        order = self.topological_sort()
-
-        start_index = 0
-        if start_from:
-            start_index = order.index(start_from)
+    def get_run_function(self, start_from: str | None = None) -> Callable:
+        initial_step_name = (
+            [step.name for step in self.steps.values() if step.initial][0]
+            if not start_from
+            else start_from
+        )
+        first_func_node: MageStep = self.steps[initial_step_name]
 
         def run_function(**initial_inputs):
-            results = {}
-            for func_id in order[start_index:]:
-                func_node: MageStep = self.steps[func_id]
-                if func_id == order[start_index] and initial_inputs:
-                    # If it's the first function and initial_inputs are provided, use them
-                    results[func_id] = func_node.execute(**initial_inputs)
-                else:
-                    if self.dependencies[func_id]:
-                        inputs = {
-                            param: self.steps[dep].result
-                            for dep, param in zip(
-                                self.dependencies[func_id],
-                                func_node.signature.parameters,
+            """
+            Execute steps starting from the initial step, following the next_step attribute.
+
+            Args:
+                initial_inputs (dict): The inputs for the initial step.
+            """
+            self.is_running = True
+            self.execution_results = []
+
+            def execute_graph(
+                step_name: str,
+                inputs: dict | None = None,
+                previous_result_ids: List | None = None,
+            ) -> MageResult:
+                """
+                Helper function to execute a step by its name.
+                """
+                logger.info(f"Executing step: {step_name}")
+                current_node = step_name
+                current_data = inputs
+
+                while current_node:
+                    logger.warning(f"Current node: {current_node}")
+                    # Get the current step
+                    step = self.steps[current_node]
+
+                    # Execute the step
+                    if isinstance(current_data, list):
+                        current_data = combine_dicts(current_data)
+                    # check if all required inputs are available else return
+                    if not all(
+                        input_param in current_data.keys()
+                        for input_param in step.signature.parameters
+                        if input_param not in ["prompt", "model"]
+                    ):
+                        logger.warning(
+                            f"Step {current_node} requires additional inputs. Skipping."
+                        )
+                        break
+                    response = step.execute(**current_data)
+
+                    # Store current and previous result ids
+                    if previous_result_ids is None:
+                        previous_result_ids = []
+                    if isinstance(response, list):
+                        for res in response:
+                            self.execution_results.append(
+                                {
+                                    "previous_result_ids": previous_result_ids,
+                                    "current_result_id": res.id,
+                                    "step": step.name,
+                                    "results": res.results,
+                                }
                             )
-                        }
+                        previous_result_ids = [res.id for res in response]
                     else:
-                        inputs = {
-                            param: func_node.input_values[param]
-                            for param in func_node.signature.parameters
-                        }
-                    results[func_id] = func_node.execute(**inputs)
-            # return the results of the last function
-            return results[order[-1]]
+                        self.execution_results.append(
+                            {
+                                "previous_result_ids": previous_result_ids,
+                                "current_result_id": response.id,
+                                "step": step.name,
+                                "results": response.results,
+                            }
+                        )
+                        previous_result_ids = [response.id]
+
+                    # Store the execution results
+                    if isinstance(response, list):
+                        result = response
+                        next_node = [r.next_step for r in response]
+                    elif isinstance(response, MageResult):
+                        next_node = response.next_step
+                        result = response
+                    else:
+                        raise ValueError(
+                            f"Step {current_node} returned an invalid response type."
+                        )
+                    if isinstance(next_node, list):  # Multiple next nodes
+                        if isinstance(result, list):
+                            logger.warning("Multiple next nodes and multiple results.")
+                            # Map the next_node to each result item
+                            current_node = next_node
+                            current_data = []
+                            next_node = None
+                            previous_result_ids_list = []
+                            for r, n in zip(result, current_node):
+                                d, next_node, previous_result_idx = execute_graph(
+                                    step_name=n,
+                                    inputs=r.results,
+                                    previous_result_ids=[r.id],
+                                )
+                                current_data.append(d)
+                                previous_result_ids_list.append(previous_result_idx)
+                            previous_result_ids = [
+                                id for ids in previous_result_ids_list for id in ids
+                            ]
+                            current_node = next_node
+                        else:
+                            logger.warning("Multiple next nodes and single result.")
+                            # Passing the single result to each next node
+                            current_data = []
+                            current_node = next_node
+                            next_nodes = []
+                            previous_result_ids = []
+                            for n in current_node:
+                                res, next_node, pid = execute_graph(
+                                    step_name=n,
+                                    inputs=result.results,
+                                    previous_result_ids=[result.id],
+                                )
+                                previous_result_ids.extend(pid)
+                                current_data.append(res)
+                                if next_node:
+                                    next_nodes.append(next_node)
+                            # if all the next node are the same, then we can just use the first one else raise an error
+                            if len(set(next_nodes)) == 1:
+                                current_node = next_nodes[0]
+                            else:
+                                logger.error(
+                                    f"Step {current_node} returned {next_nodes} as next nodes."
+                                )
+                                raise ValueError(
+                                    "Multiple next nodes and single result. Next nodes are different."
+                                )
+                    else:
+                        if isinstance(result, list):
+                            logger.warning("Single next node and multiple results.")
+                            current_node = next_node
+                            current_data = []
+                            next_node = None
+                            for r in result:
+                                d, next_node, previous_result_ids = execute_graph(
+                                    step_name=current_node,
+                                    inputs=r.results,
+                                    previous_result_ids=[r.id],
+                                )
+                                current_data.append(d)
+                            current_node = next_node
+                        else:
+                            if next_node and self.steps[next_node].many_to_one:
+                                logger.warning(
+                                    "Single next node and many-to-one result."
+                                )
+                                current_data = result.results
+                                current_node = next_node
+                                break
+                            else:
+                                logger.warning("Single next node and single result.")
+                                current_node = next_node
+                                current_data = result.results
+
+                return (
+                    current_data,
+                    current_node,
+                    previous_result_ids if previous_result_ids else None,
+                )
+
+            final_result, _, _ = execute_graph(initial_step_name, initial_inputs)
+            self.is_running = False
+            return final_result
 
         # Set the signature of the returned function to match the first function in the graph
-        first_func_id = order[start_index]
-        first_func_node: MageStep = self.steps[first_func_id]
         run_function.__signature__ = first_func_node.signature
-
         return run_function
 
     def __repr__(self) -> str:
@@ -243,72 +302,19 @@ class PromptMage:
         return []
 
 
-class MageStep:
-    def __init__(
-        self,
-        name: str,
-        func: Callable,
-        prompt_store: PromptStore,
-        data_store: DataStore,
-        prompt_name: str | None = None,
-        depends_on: str | None = None,
-        model: str | None = None,
-        available_models: List[str] | None = None,
-    ):
-        self.step_id = str(uuid.uuid4())
-        self.name = name
-        self.func = func
-        self.signature = inspect.signature(func)
-        self.prompt_store = prompt_store
-        self.data_store = data_store
-        self.prompt_name = prompt_name
-        self.depends_on = depends_on
-        self.model = model
-        self.available_models = available_models
+def combine_dicts(list_of_dicts):
+    # Initialize a defaultdict where each key will hold a list of values
+    combined_dict = defaultdict(list)
 
-        # store inputs and results
-        self.input_values = {}
-        self.result = None
+    # Iterate through each dictionary in the list
+    for d in list_of_dicts:
+        for key, value in d.items():
+            combined_dict[key].append(value)
 
-        # Initialize input values with default parameter values
-        for param in self.signature.parameters.values():
-            if param.name in ["prompt", "model"]:
-                continue
-            if param.default is not inspect.Parameter.empty:
-                self.input_values[param.name] = param.default
-            else:
-                self.input_values[param.name] = None
+    # Convert lists with a single value back to that value
+    final_dict = {
+        key: (value[0] if len(value) == 1 else value)
+        for key, value in combined_dict.items()
+    }
 
-        # callbacks for the frontend
-        self._input_callbacks = []
-        self._output_callbacks = []
-
-    def execute(self, **inputs):
-        for key, value in inputs.items():
-            self.input_values[key] = value
-        if self.model:
-            self.input_values["model"] = self.model
-        for callback in self._input_callbacks:
-            callback()
-        self.result = self.func(**self.input_values)
-        # run the callbacks
-        for callback in self._output_callbacks:
-            callback()
-        return self.result
-
-    def __repr__(self):
-        return f"Step(step_id={self.step_id}, name={self.name}, prompt_name={self.prompt_name}, depends_on={self.depends_on})"
-
-    def get_prompt(self) -> Prompt:
-        return self.prompt_store.get_prompt(self.prompt_name)
-
-    def set_prompt(self, prompt: Prompt):
-        prompt.id = str(uuid.uuid4())
-        prompt.version = prompt.version + 1
-        self.prompt_store.store_prompt(prompt)
-
-    def on_input_change(self, callback):
-        self._input_callbacks.append(callback)
-
-    def on_output_change(self, callback):
-        self._output_callbacks.append(callback)
+    return final_dict
