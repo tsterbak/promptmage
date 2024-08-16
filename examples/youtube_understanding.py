@@ -27,7 +27,7 @@ mage = PromptMage(
 )
 
 
-@mage.step(name="get-transcript", pass_through_inputs=["question"], initial=True)
+@mage.step(name="get-transcript", initial=True)
 def get_transcript(video_id: str, question: str) -> str:
     """Get the transcript of a YouTube video.
 
@@ -36,12 +36,14 @@ def get_transcript(video_id: str, question: str) -> str:
     transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["de"])
     transcript_text = TextFormatter().format_transcript(transcript)
     return MageResult(
-        next_step=["create-outline", "extract-facts"], transcript=transcript_text
+        next_step=["create-outline", "extract-facts"],
+        transcript=transcript_text,
+        question=question,
     )
 
 
 @mage.step(name="create-outline", prompt_name="create-outline")
-def create_outline(transcript: str, prompt: Prompt) -> str:
+def create_outline(transcript: str, question: str, prompt: Prompt) -> str:
     """Create an outline from the transcript of a YouTube video."""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -51,12 +53,14 @@ def create_outline(transcript: str, prompt: Prompt) -> str:
         ],
     )
     return MageResult(
-        next_step="answer-question", outline=response.choices[0].message.content
+        next_step="answer-question",
+        outline=response.choices[0].message.content,
+        question=question,
     )
 
 
 @mage.step(name="extract-facts", prompt_name="extract-facts")
-def extract_facts(transcript: str, prompt: Prompt) -> str:
+def extract_facts(transcript: str, question: str, prompt: Prompt) -> str:
     """Extract facts from the transcript of a YouTube video."""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -68,14 +72,12 @@ def extract_facts(transcript: str, prompt: Prompt) -> str:
     return MageResult(
         next_step="answer-question",
         facts=response.choices[0].message.content,
-        question="What is the video about?",
     )
 
 
 @mage.step(
     name="answer-question",
     prompt_name="answer-question",
-    depends_on=["create-outline", "extract-facts"],
 )
 def answer_question(outline: str, facts: str, question: str, prompt: Prompt) -> str:
     """Answer a question based on the outline of a YouTube video."""

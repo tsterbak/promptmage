@@ -95,7 +95,6 @@ class PromptMage:
                 depends_on=depends_on,
                 one_to_many=one_to_many,
                 many_to_one=many_to_one,
-                pass_through_inputs=pass_through_inputs,
                 available_models=(
                     self.available_models if func_params.get("model") else None
                 ),
@@ -117,41 +116,6 @@ class PromptMage:
             return func
 
         return decorator
-
-    def _build_dependency_graph(self):
-        """Builds the dependency graph of the PromptMage instance.
-
-        Computes the indegree of each node in the graph.
-        """
-        self.graph.clear()
-        self.indegree.clear()
-
-        for func_id, deps in self.dependencies.items():
-            for dep in deps:
-                self.graph[dep].append(func_id)
-                self.indegree[func_id] += 1
-            if func_id not in self.indegree:
-                self.indegree[func_id] = 0
-
-    def _topological_sort(self) -> List:
-        """Returns a topological sort of the dependency graph."""
-        order = []
-        queue = deque([node for node in self.indegree if self.indegree[node] == 0])
-
-        while queue:
-            node = queue.popleft()
-            order.append(node)
-            for neighbor in self.graph[node]:
-                self.indegree[neighbor] -= 1
-                if self.indegree[neighbor] == 0:
-                    queue.append(neighbor)
-
-        if len(order) == len(self.indegree):
-            return order
-        else:
-            raise ValueError(
-                "Cyclic dependency detected. This is currently not supported."
-            )
 
     def get_run_function(self, start_from: str | None = None) -> Callable:
         initial_step_name = (
@@ -198,7 +162,7 @@ class PromptMage:
                         if input_param not in ["prompt", "model"]
                     ):
                         logger.warning(
-                            f"Step {current_node} requires additional inputs. Returning."
+                            f"Step {current_node} requires additional inputs. Skipping."
                         )
                         break
                     response = step.execute(**current_data)
@@ -274,11 +238,15 @@ class PromptMage:
                                 )
                                 previous_result_ids.extend(pid)
                                 current_data.append(res)
-                                next_nodes.append(next_node)
+                                if next_node:
+                                    next_nodes.append(next_node)
                             # if all the next node are the same, then we can just use the first one else raise an error
                             if len(set(next_nodes)) == 1:
                                 current_node = next_nodes[0]
                             else:
+                                logger.error(
+                                    f"Step {current_node} returned {next_nodes} as next nodes."
+                                )
                                 raise ValueError(
                                     "Multiple next nodes and single result. Next nodes are different."
                                 )
@@ -321,73 +289,6 @@ class PromptMage:
 
         # Set the signature of the returned function to match the first function in the graph
         run_function.__signature__ = first_func_node.signature
-        return run_function
-
-    def get_run_function_old(self, start_from=None) -> Callable:
-        """Returns a function that runs the PromptMage graph starting from the given step.
-
-        It has the same signature as the first function in the graph and takes these inputs.
-        """
-        self._build_dependency_graph()
-        order = self._topological_sort()
-
-        start_index = 0
-        if start_from:
-            start_index = order.index(start_from)
-
-        def run_function(**initial_inputs):
-            results = {}
-            for step_id in order[start_index:]:
-                step: MageStep = self.steps[step_id]
-                # store the pass through inputs in self.pass_through_inputs
-                if step.pass_through_inputs:
-                    for pass_through_input in step.pass_through_inputs:
-                        if pass_through_input in initial_inputs:
-                            if pass_through_input not in self.pass_through_inputs:
-                                self.pass_through_inputs[pass_through_input] = (
-                                    initial_inputs[pass_through_input]
-                                )
-                            else:
-                                logger.warning(
-                                    f"Pass through input: {pass_through_input} already exists. Ignoring the new value."
-                                )
-                if step_id == order[start_index] and initial_inputs:
-                    # If it's the first step and initial_inputs are provided, use them
-                    results[step_id] = step.execute(**initial_inputs)
-                else:
-                    # Otherwise, get the inputs from the previous step
-                    if self.dependencies[step_id]:
-                        inputs = {
-                            param: self.steps[dep].result
-                            for dep, param in zip(
-                                self.dependencies[step_id],
-                                step.signature.parameters,
-                            )
-                        }
-                    else:
-                        inputs = {
-                            param: step.input_values[param]
-                            for param in step.signature.parameters
-                        }
-                    # inject the pass through inputs
-                    for pass_through_input in self.pass_through_inputs:
-                        if (
-                            pass_through_input in step.signature.parameters
-                            and pass_through_input not in inputs
-                        ):
-                            inputs[pass_through_input] = self.pass_through_inputs[
-                                pass_through_input
-                            ]
-                    # execute the step
-                    results[step_id] = step.execute(**inputs)
-            # return the results of the last step
-            return results[order[-1]]
-
-        # Set the signature of the returned function to match the first function in the graph
-        first_func_id = order[start_index]
-        first_func_node: MageStep = self.steps[first_func_id]
-        run_function.__signature__ = first_func_node.signature
-
         return run_function
 
     def __repr__(self) -> str:
