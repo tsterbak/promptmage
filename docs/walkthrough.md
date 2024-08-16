@@ -16,7 +16,7 @@ This will start the promptmage server and run the application at the given path.
 
 PromptMage automatically creates an API for your application using FastAPI. You can access the API at `http://localhost:8000/api/` and the Swagger documentation at `http://localhost:8000/docs/`.
 
-![Swagger UI](images/screenshots/swagger.png)
+![Swagger UI](images/screenshots/api-docs.png)
 
 You can use the API to interact with your application programmatically or integrate it into other services.
 
