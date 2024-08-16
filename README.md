@@ -9,6 +9,9 @@
   <p align="center">
     simplifies the process of creating and managing LLM workflows as a self-hosted solution.
   </p>
+  [![License](https://img.shields.io/github/license/tsterbak/promptmage?color=green)](https://github.com/tsterbak/promptmage/blob/main/LICENSE)
+  [![pypi](https://img.shields.io/pypi/v/promptmage)](https://pypi.org/project/promptmage/)
+  [![Downloads](https://pepy.tech/badge/promptmage)](https://pepy.tech/project/promptmage)
 </div>
 
 ## About the Project
