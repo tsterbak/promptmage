@@ -19,7 +19,13 @@ def create_main_runner(mage: PromptMage, execution_graph):
         mage.is_running = True
         execution_graph.refresh()
         result = await run.io_bound(flow_func, **inputs)
-        result_field.set_content(f"{str(result)}")
+        newline = "\n\n"
+        if isinstance(result, list):
+            result_field.set_content(
+                f"{[newline.join(res.values()) for res in result]}"
+            )
+        else:
+            result_field.set_content(f"{newline.join(result.values())}")
         result_field.update()
         execution_graph.refresh()
 

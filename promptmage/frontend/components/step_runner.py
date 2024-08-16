@@ -98,10 +98,13 @@ def create_function_runner(step: MageStep):
         expansion_tab.update()
 
     def update_results():
+        newline = "\n\n"
         if isinstance(step.result, list):
-            result_field.set_content(f"{[result.results for result in step.result]}")
+            result_field.set_content(
+                f"{[newline.join(result.results.values()) for result in step.result]}"
+            )
         else:
-            result_field.set_content(f"{step.result.results}")
+            result_field.set_content(f"{newline.join(step.result.results.values())}")
         result_field.update()
 
         expansion_tab.props(f"icon={SUCCESS_RUN_ICON}")

@@ -191,6 +191,16 @@ class PromptMage:
                     # Execute the step
                     if isinstance(current_data, list):
                         current_data = combine_dicts(current_data)
+                    # check if all required inputs are available else return
+                    if not all(
+                        input_param in current_data.keys()
+                        for input_param in step.signature.parameters
+                        if input_param not in ["prompt", "model"]
+                    ):
+                        logger.warning(
+                            f"Step {current_node} requires additional inputs. Returning."
+                        )
+                        break
                     response = step.execute(**current_data)
 
                     # Store current and previous result ids
@@ -252,25 +262,26 @@ class PromptMage:
                         else:
                             logger.warning("Multiple next nodes and single result.")
                             # Passing the single result to each next node
-                            current_node = next_node
-                            current_data = [
-                                execute_graph(
-                                    step_name=n,
-                                    inputs=result.results,
-                                    previous_result_ids=previous_result_ids,
-                                )[0]
-                                for n in next_node
-                            ]
                             current_data = []
-                            next_node = None
+                            current_node = next_node
+                            next_nodes = []
+                            previous_result_ids = []
                             for n in current_node:
-                                d, next_node, previous_result_ids = execute_graph(
+                                res, next_node, pid = execute_graph(
                                     step_name=n,
                                     inputs=result.results,
-                                    previous_result_ids=previous_result_ids,
+                                    previous_result_ids=[result.id],
                                 )
-                                current_data.append(d)
-                            current_node = next_node
+                                previous_result_ids.extend(pid)
+                                current_data.append(res)
+                                next_nodes.append(next_node)
+                            # if all the next node are the same, then we can just use the first one else raise an error
+                            if len(set(next_nodes)) == 1:
+                                current_node = next_nodes[0]
+                            else:
+                                raise ValueError(
+                                    "Multiple next nodes and single result. Next nodes are different."
+                                )
                     else:
                         if isinstance(result, list):
                             logger.warning("Single next node and multiple results.")

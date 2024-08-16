@@ -67,19 +67,32 @@ def execution_graph(flow: PromptMage):
         ui.label("Execution Result will be shown here.")
 
     if flow.execution_results:
-        logger.info(flow.execution_results)
+        for result in flow.execution_results:
+            logger.info(
+                f"{result.get('step')}, {result.get('current_result_id')}, {result.get('previous_result_ids')}, {result.get('results',{}).keys()}"
+            )
         graph, id_to_step_name, id_to_result = render_mermaid_diagram(
             flow.execution_results
         )
 
         def node_dialog(id: str):
             dialog.clear()
-            with dialog, ui.card().classes("w-64 h-64"):
-                ui.label(id_to_step_name[id])
-                ui.markdown(str(id_to_result[id]))
+            with dialog, ui.card().classes("w-512 h-128"):
+                with ui.row().classes("w-full justify-between"):
+                    ui.label(f"Result for step '{id_to_step_name[id]}'").classes(
+                        "text-lg"
+                    )
+                    ui.space()
+                    ui.button("Close", on_click=dialog.close)
+                ui.markdown(
+                    "\n\n".join(
+                        f"{variable}:\n{result}"
+                        for variable, result in id_to_result[id].items()
+                    )
+                )
             dialog.open()
 
-        ui.mermaid(graph, config={"securityLevel": "loose"})
+        ui.mermaid(graph, config={"securityLevel": "loose"}).classes("w-2/3")
         ui.on("graph_click", lambda e: node_dialog(e.args))
         logger.info(graph)
     elif flow.is_running:
