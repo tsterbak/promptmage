@@ -21,6 +21,10 @@
 
 The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
 
+![PromptMage](images/screenshots/playground-finished.png)
+
+Take the [walkthrough](walkthrough.md) to see what you can do with PromptMage.
+
 ## Philosophy
 - Integrate the prompt playground into your workflow for fast iteration
 - Prompts as first-class citizens with version control and collaboration features

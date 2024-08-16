@@ -1,5 +1,4 @@
 import json
-import random
 from typing import List
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -38,8 +37,6 @@ def extract_facts(
     )
     raw_facts = response.choices[0].message.content
     raw_facts = raw_facts.replace("```json", "").strip("```").strip()
-    if random.random() > 0.5:
-        return MageResult(next_step="extract", article=article)
     return [
         MageResult(next_step="check_facts", fact=str(f)) for f in json.loads(raw_facts)
     ]
@@ -61,11 +58,6 @@ def check_facts(fact: str, prompt: Prompt) -> MageResult:
             },
         ],
     )
-    if random.random() > 0.5:
-        return MageResult(
-            next_step="check_facts",
-            fact=fact,
-        )
     return MageResult(
         next_step="summarize",
         check_results=f"Fact: {fact}\n\nCheck result: {response.choices[0].message.content}",
