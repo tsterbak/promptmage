@@ -16,6 +16,8 @@ def create_main_runner(mage: PromptMage, execution_graph):
 
     async def run_function():
         inputs = {name: field.value for name, field in input_fields.items()}
+        mage.is_running = True
+        execution_graph.refresh()
         result = await run.io_bound(flow_func, **inputs)
         result_field.set_content(f"{str(result)}")
         result_field.update()

@@ -49,6 +49,9 @@ class PromptMage:
         # store execution results and details
         self.execution_results = []
 
+        # store the running status
+        self.is_running = False
+
     def step(
         self,
         name: str,
@@ -165,6 +168,7 @@ class PromptMage:
             Args:
                 initial_inputs (dict): The inputs for the initial step.
             """
+            self.is_running = True
             self.execution_results = []
 
             def execute_graph(
@@ -301,6 +305,7 @@ class PromptMage:
                 )
 
             final_result, _, _ = execute_graph(initial_step_name, initial_inputs)
+            self.is_running = False
             return final_result
 
         # Set the signature of the returned function to match the first function in the graph

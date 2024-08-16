@@ -64,7 +64,7 @@ def render_mermaid_diagram(execution_list: list) -> str:
 @ui.refreshable
 def execution_graph(flow: PromptMage):
     with ui.dialog() as dialog, ui.card():
-        ui.label("Execution Result.")
+        ui.label("Execution Result will be shown here.")
 
     if flow.execution_results:
         logger.info(flow.execution_results)
@@ -82,8 +82,10 @@ def execution_graph(flow: PromptMage):
         ui.mermaid(graph, config={"securityLevel": "loose"})
         ui.on("graph_click", lambda e: node_dialog(e.args))
         logger.info(graph)
-    else:
+    elif flow.is_running:
         ui.spinner("puff", size="xl")
+    else:
+        ui.label("No execution results available.")
 
 
 def build_flow_page(flow: PromptMage):
