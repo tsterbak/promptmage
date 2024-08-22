@@ -117,7 +117,9 @@ class PromptMage:
 
         return decorator
 
-    def get_run_function(self, start_from: str | None = None) -> Callable:
+    def get_run_function(
+        self, start_from: str | None = None, active_prompts: bool | None = None
+    ) -> Callable:
         initial_step_name = (
             [step.name for step in self.steps.values() if step.initial][0]
             if not start_from
@@ -165,7 +167,7 @@ class PromptMage:
                             f"Step {current_node} requires additional inputs. Skipping."
                         )
                         break
-                    response = step.execute(**current_data)
+                    response = step.execute(**current_data, active=active_prompts)
 
                     # Store current and previous result ids
                     if previous_result_ids is None:

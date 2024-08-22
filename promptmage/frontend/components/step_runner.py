@@ -48,8 +48,13 @@ def create_function_runner(step: MageStep):
     # load prompt if available
     if step.prompt_name:
         prompt = step.get_prompt()
+        # load all available prompts for the step
+        prompts = [
+            p for p in step.prompt_store.get_prompts() if p.name == step.prompt_name
+        ]
     else:
         prompt = None
+        prompts = []
 
     # run id given in app.storage, initialize with this data
     if app.storage.user.get("step_run_id"):
@@ -75,7 +80,7 @@ def create_function_runner(step: MageStep):
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
-        _ = await run.io_bound(step.execute, **inputs)
+        _ = await run.io_bound(step.execute, **inputs, prompt=prompt)
         if step.one_to_many:
             num_results = len(step.result.results)
             expansion_tab.props(f"caption='{num_results} results'")
@@ -113,6 +118,16 @@ def create_function_runner(step: MageStep):
             expansion_tab.props(f"caption='{num_results} results'")
         expansion_tab.update()
 
+    def display_prompt(prompt_str: str):
+        nonlocal prompt
+        logger.info(f"Selected prompt: {prompt_str}")
+        prompt_name, version = prompt_str.split(" - v")
+        prompt = step.prompt_store.get_prompt(prompt_name, version=int(version))
+        system_prompt_field.set_value(prompt.system)
+        user_prompt_field.set_value(prompt.user)
+        system_prompt_field.update()
+        user_prompt_field.update()
+
     step.on_input_change(update_inputs)
     step.on_output_change(update_results)
 
@@ -121,15 +136,26 @@ def create_function_runner(step: MageStep):
         with expansion_tab:
             ui.label(f"ID: {step.step_id}")
             with ui.column().classes("w-full"):
-                # show available models if available
-                if step.available_models:
-                    with ui.row():
-                        ui.label("Select model:")
+                with ui.row().classes("w-full"):
+                    # show available models if available
+                    if step.available_models:
                         model_select = ui.select(
                             step.available_models,
                             label="Select model",
                             value=step.model,
-                        )
+                        ).classes("w-1/3")
+                    # show available prompts
+                    prompt_select = ui.select(
+                        [f"{p.name} - v{p.version}" for p in prompts],
+                        label="Select prompt",
+                        value=(
+                            f"{prompt.name} - v{prompt.version}"
+                            if prompt
+                            else "No prompt selected"
+                        ),
+                        on_change=lambda event: display_prompt(event.value),
+                    ).classes("w-1/3")
+
                 with ui.row().classes("w-full"):
                     ui.label("Prompts:").classes("font-bold")
                     with ui.row().classes("grow"):

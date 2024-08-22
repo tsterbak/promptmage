@@ -49,7 +49,7 @@ class PromptMageFrontend:
         @ui.page("/prompts/{flow_name}", title="PromptMage - Prompts")
         def prompts_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Prompts Overview _ {flow_name}", flow_name=flow_name):
+            with theme.frame(f"Prompts Overview - {flow_name}", flow_name=flow_name):
                 create_prompts_view(self.current_flow)()
 
         @ui.page("/evaluation/{flow_name}", title="PromptMage - Evaluation")

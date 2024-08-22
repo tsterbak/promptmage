@@ -76,7 +76,9 @@ class MageStep:
         self._input_callbacks = []
         self._output_callbacks = []
 
-    def execute(self, **inputs):
+    def execute(
+        self, prompt: Prompt | None = None, active: bool | None = None, **inputs
+    ):
         """Execute the step with the given inputs."""
         logger.info(f"Executing step: {self.name}...")
         multi_input_param = None
@@ -91,8 +93,11 @@ class MageStep:
             self.input_values["model"] = self.model
         # get the prompt and set it if exists
         if self.prompt_name:
-            prompt = self.get_prompt()
-            self.input_values["prompt"] = prompt
+            if prompt:
+                self.input_values["prompt"] = prompt
+            else:
+                prompt = self.get_prompt(active=active)
+                self.input_values["prompt"] = prompt
         else:
             prompt = None
         # run the input callbacks
@@ -134,8 +139,10 @@ class MageStep:
     def __repr__(self):
         return f"Step(step_id={self.step_id}, name={self.name}, prompt_name={self.prompt_name}, depends_on={self.depends_on})"
 
-    def get_prompt(self) -> Prompt:
-        return self.prompt_store.get_prompt(self.prompt_name)
+    def get_prompt(
+        self, version: int | None = None, active: bool | None = None
+    ) -> Prompt:
+        return self.prompt_store.get_prompt(self.prompt_name, version, active)
 
     def set_prompt(self, prompt: Prompt):
         prompt.id = str(uuid.uuid4())

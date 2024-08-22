@@ -15,6 +15,9 @@ from sqlalchemy import (
     DateTime,
     UUID,
     ForeignKey,
+    Boolean,
+    text,
+    and_,
 )
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
@@ -41,14 +44,16 @@ class PromptModel(Base):
     user = Column(Text, nullable=False)
     version = Column(Integer, nullable=False)
     template_vars = Column(Text, nullable=False)
+    active = Column(Boolean, nullable=False, default=False)
 
     def to_dict(self) -> Dict:
         return {
             "id": self.id,
             "name": self.name,
+            "version": self.version,
+            "active": self.active,
             "system": self.system,
             "user": self.user,
-            "version": self.version,
             "template_vars": self.template_vars.split(","),
         }
 
@@ -60,11 +65,12 @@ class PromptModel(Base):
             system=data["system"],
             user=data["user"],
             version=data["version"],
+            active=data["active"],
             template_vars=",".join(data["template_vars"]),
         )
 
     def __repr__(self):
-        return f"PromptModel(id={self.id}, name={self.name}, system={self.system}, user={self.user}, version={self.version}, template_vars={self.template_vars})"
+        return f"PromptModel(id={self.id}, name={self.name}, active={self.active}, system={self.system}, user={self.user}, version={self.version}, template_vars={self.template_vars})"
 
 
 class SQLitePromptBackend(StorageBackend):
@@ -78,6 +84,13 @@ class SQLitePromptBackend(StorageBackend):
         self.db_path = db_path if db_path else ".promptmage/promptmage.db"
         self.engine = create_engine(f"sqlite:///{self.db_path}")
         Base.metadata.create_all(self.engine)
+
+        # Define the SQL command to update the existing rows
+        # update_command = text("UPDATE prompts SET active = false WHERE active IS NULL")
+        # Execute the update command
+        # with self.engine.connect() as conn:
+        #     conn.execute(update_command)
+
         self.Session = sessionmaker(bind=self.engine)
 
     def store_prompt(self, prompt: Prompt):
@@ -92,27 +105,26 @@ class SQLitePromptBackend(StorageBackend):
             session.close()
 
     def update_prompt(self, prompt: Prompt):
+        """Update an existing prompt in the database by id.
+
+        Args:
+            prompt (Prompt): The prompt to update.
+        """
         session = self.Session()
         try:
-            existing_prompt = (
-                session.execute(
-                    select(PromptModel).where(PromptModel.name == prompt.name)
-                )
-                .scalars()
-                .all()
-            )
+            existing_prompt = session.execute(
+                select(PromptModel).where(PromptModel.id == prompt.id)
+            ).scalar_one_or_none()
 
             if not existing_prompt:
                 raise PromptNotFoundException(
                     f"Prompt with name {prompt.name} not found."
                 )
 
-            latest_prompt = max(existing_prompt, key=lambda p: p.version)
-
-            latest_prompt.version += 1
-            latest_prompt.system = prompt.system
-            latest_prompt.user = prompt.user
-            latest_prompt.template_vars = ",".join(prompt.template_vars)
+            existing_prompt.system = prompt.system
+            existing_prompt.user = prompt.user
+            existing_prompt.active = prompt.active
+            existing_prompt.template_vars = ",".join(prompt.template_vars)
 
             session.commit()
         except SQLAlchemyError as e:
@@ -121,13 +133,28 @@ class SQLitePromptBackend(StorageBackend):
         finally:
             session.close()
 
-    def get_prompt(self, prompt_name: str) -> Prompt:
+    def get_prompt(
+        self, prompt_name: str, version: int | None = None, active: bool | None = None
+    ) -> Prompt:
+        """Get a prompt by name from the database.
+
+        Args:
+            prompt_name (str): The name of the prompt to retrieve.
+            version (int): The version of the prompt to retrieve.
+            active (bool): Whether to retrieve only the active prompt.
+        """
         session = self.Session()
         try:
+            # build the where clause based on name version and active
+            where_clause = [PromptModel.name == prompt_name]
+            if version is not None:
+                where_clause.append(PromptModel.version == version)
+            if active is not None:
+                where_clause.append(PromptModel.active == active)
+            combined_where_clause = and_(*where_clause)
+            # run the query to get the prompt
             rows = (
-                session.execute(
-                    select(PromptModel).where(PromptModel.name == prompt_name)
-                )
+                session.execute(select(PromptModel).where(combined_where_clause))
                 .scalars()
                 .all()
             )

@@ -24,19 +24,27 @@ def create_prompts_view(mage: PromptMage):
                 "margin: 20px; margin-bottom: 0px; margin-top: 100px;"
             )
             for prompt in sorted(prompts, key=lambda p: p.version, reverse=True):
+                bg_color = ""
+                # highlight active prompt in green
+                if prompt.active:
+                    bg_color = "background-color: #d3fcd5;"
                 with ui.card().style(
-                    "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px"
+                    "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px;"
+                    + bg_color
                 ):
                     # display run data
                     ui.label(f"Prompt ID: {prompt.id}")
                     ui.label(f"Name: {prompt.name}")
                     ui.label(f"Version: {prompt.version}")
+                    ui.label(f"Active: {prompt.active}")
                     ui.label(f"System prompt: {prompt.system}")
                     ui.label(f"User prompt: {prompt.user}")
                     with ui.row():
                         ui.button(
-                            "Use Prompt",
-                            on_click=lambda prompt_id=prompt.id: use_prompt(prompt_id),
+                            "Activate Prompt",
+                            on_click=lambda prompt_id=prompt.id: activate_prompt(
+                                prompt_id
+                            ),
                         )
                         ui.button(
                             "Edit Prompt",
@@ -54,6 +62,8 @@ def create_prompts_view(mage: PromptMage):
     def delete_prompt(prompt_id):
         logger.info(f"Deleting prompt with ID: {prompt_id}.")
         mage.prompt_store.delete_prompt(prompt_id)
+        ui.notify(f"Prompt {prompt_id} deleted.")
+        side_panel.update()
 
     def edit_prompt(prompt_id):
         logger.info(f"Editing prompt with ID: {prompt_id}.")
@@ -83,8 +93,19 @@ def create_prompts_view(mage: PromptMage):
 
         dialog.open()
 
-    def use_prompt(prompt_id):
-        logger.info(f"Using prompt with ID: {prompt_id}. Not implemented yet.")
+    def activate_prompt(prompt_id):
+        logger.info(f"Activating prompt with ID: {prompt_id}.")
+        # activate the selected prompt
+        prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
+        prompt.active = True
+        mage.prompt_store.update_prompt(prompt)
+        # deactivate all other prompts with the same name
+        for p in mage.prompt_store.get_prompts():
+            if p.name == prompt.name and p.id != prompt_id:
+                p.active = False
+                mage.prompt_store.update_prompt(p)
+        ui.notify(f"Prompt {prompt_id} activated.")
+        side_panel.update()
 
     def save_prompt(prompt_id: str, system: str, user: str):
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
