@@ -45,7 +45,6 @@ def frame(navigation_title: str, flow_name: str = None):
             "flat color=white"
         ).classes("p-0"):
             ui.avatar("img:/static/promptmage-logo.png", square=True)
-        ui.space()
         ui.label(navigation_title).classes("text-2xl self-center")
         ui.space()
         menu(flow_name=flow_name)

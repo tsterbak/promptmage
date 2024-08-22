@@ -37,7 +37,7 @@ class PromptMageFrontend:
         @ui.page("/{flow_name}", title="PromptMage - Flow")
         def flow_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Playground {flow_name}", flow_name=flow_name):
+            with theme.frame("Playground", flow_name=flow_name):
                 build_flow_page(self.flows_dict[flow_name])
 
         @ui.page("/runs/{flow_name}", title="PromptMage - Runs")

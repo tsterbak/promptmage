@@ -356,13 +356,13 @@ files = [
 
 [[package]]
 name = "docutils"
-version = "0.19"
+version = "0.21.2"
 description = "Docutils -- Python Documentation Utilities"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "docutils-0.19-py3-none-any.whl", hash = "sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc"},
-    {file = "docutils-0.19.tar.gz", hash = "sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6"},
+    {file = "docutils-0.21.2-py3-none-any.whl", hash = "sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2"},
+    {file = "docutils-0.21.2.tar.gz", hash = "sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f"},
 ]
 
 [[package]]
@@ -970,20 +970,20 @@ files = [
 
 [[package]]
 name = "nicegui"
-version = "1.4.35"
+version = "1.4.36"
 description = "Create web-based user interfaces with Python. The nice way."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "nicegui-1.4.35-py3-none-any.whl", hash = "sha256:ece63efcc1850bb767b751a066ebb4293f2b7e0b887f7494dc7f508514e52473"},
-    {file = "nicegui-1.4.35.tar.gz", hash = "sha256:7960a72fc28876f9377e9047fbf94e5752cc532d93f898b171679ca08e06ebd4"},
+    {file = "nicegui-1.4.36-py3-none-any.whl", hash = "sha256:c25d29994cdec51ec83b705475c89ab49de70a40b55d329d3d6a14e61927efeb"},
+    {file = "nicegui-1.4.36.tar.gz", hash = "sha256:190014d896740365bca72b08b318e9340224634fc08fe1c29b4dea24ff8d5982"},
 ]
 
 [package.dependencies]
 aiofiles = ">=23.1.0"
 aiohttp = ">=3.10.2"
 certifi = ">=2024.07.04"
-docutils = ">=0.19,<0.20"
+docutils = ">=0.19.0"
 fastapi = ">=0.109.1,<0.110.0"
 httpx = ">=0.24.0"
 ifaddr = ">=0.2.0"

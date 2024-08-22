@@ -138,7 +138,6 @@ def create_prompts_view(mage: PromptMage):
         side_panel.update()
 
     def build_ui():
-        ui.label("Prompts").classes("text-2xl")
         all_prompts = mage.prompt_store.get_prompts()
         # group them by name
         prompts = defaultdict(list)

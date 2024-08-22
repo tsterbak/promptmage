@@ -120,7 +120,6 @@ def create_runs_view(mage: PromptMage):
         ui.notify("Not implemented yet. Run rated successfully.")
 
     def build_ui():
-        ui.label("Runs").classes("text-2xl")
         runs: List[RunData] = mage.get_run_data()
 
         def display_comparison():
