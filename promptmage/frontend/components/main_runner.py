@@ -57,8 +57,10 @@ def create_main_runner(mage: PromptMage, execution_graph):
                     "Copy to clipboard",
                     on_click=lambda: ui.clipboard.write(result_field.content),
                 )  # .props("fab")
-            result_field = ui.markdown("").style(
-                "color: blue; height: 200px; overflow-y: auto;"
+            result_field = (
+                ui.markdown("")
+                .style("height: 200px; overflow-y: auto;")
+                .classes("color-black dark:color-white")
             )
 
     return build_ui()

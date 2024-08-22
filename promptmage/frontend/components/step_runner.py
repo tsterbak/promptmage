@@ -195,8 +195,10 @@ def create_function_runner(step: MageStep):
                             step.result or "No result available"
                         ),
                     )
-                result_field = ui.markdown(
-                    f"{step.result}" if step.result else ""
-                ).style("margin-top: 20px; color: blue;")
+                result_field = (
+                    ui.markdown(f"{step.result}" if step.result else "")
+                    .style("margin-top: 20px;")
+                    .classes("color-black dark:color-white")
+                )
 
     return build_ui
