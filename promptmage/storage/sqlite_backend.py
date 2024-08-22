@@ -148,7 +148,7 @@ class SQLitePromptBackend(StorageBackend):
             ).scalar_one_or_none()
             if prompt is None:
                 raise PromptNotFoundException(f"Prompt with ID {prompt_id} not found.")
-            return prompt
+            return Prompt(**prompt.to_dict())
         finally:
             session.close()
 
