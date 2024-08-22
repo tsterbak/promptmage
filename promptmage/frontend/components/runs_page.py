@@ -5,14 +5,7 @@ from slugify import slugify
 from nicegui import ui, app
 
 from promptmage import PromptMage, RunData
-
-
-def label_with_icon(label: str, icon: str):
-    row = ui.row().classes("gap-2 items-center")
-    with row:
-        ui.icon(icon)
-        ui.label(label)
-    return row
+from .styles import label_with_icon
 
 
 def create_runs_view(mage: PromptMage):

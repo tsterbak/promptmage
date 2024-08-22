@@ -5,6 +5,7 @@ from typing import List
 
 from promptmage import PromptMage
 from promptmage.prompt import Prompt
+from .styles import label_with_icon
 
 
 def create_prompts_view(mage: PromptMage):
@@ -33,12 +34,25 @@ def create_prompts_view(mage: PromptMage):
                     + bg_color
                 ):
                     # display run data
-                    ui.label(f"Prompt ID: {prompt.id}")
-                    ui.label(f"Name: {prompt.name}")
-                    ui.label(f"Version: {prompt.version}")
-                    ui.label(f"Active: {prompt.active}")
-                    ui.label(f"System prompt: {prompt.system}")
-                    ui.label(f"User prompt: {prompt.user}")
+                    with ui.grid(columns=2).classes("gap-0"):
+                        label_with_icon("Prompt ID:", icon="o_info")
+                        ui.label(f"{prompt.id}")
+
+                        label_with_icon("Name:", icon="o_badge")
+                        ui.label(f"{prompt.name}")
+
+                        label_with_icon("Version:", icon="o_tag")
+                        ui.label(f"{prompt.version}")
+
+                        label_with_icon("Active:", icon="o_check")
+                        ui.label(f"{prompt.active}")
+
+                        label_with_icon("System prompt:", icon="o_code")
+                        ui.label(f"{prompt.system}")
+
+                        label_with_icon("User prompt:", icon="o_psychology")
+                        ui.label(f"{prompt.user}")
+
                     with ui.row():
                         ui.button(
                             "Activate Prompt",
