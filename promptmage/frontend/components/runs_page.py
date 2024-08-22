@@ -12,8 +12,12 @@ def create_runs_view(mage: PromptMage):
 
     datasets = mage.data_store.backend.get_datasets()
 
-    side_panel = ui.element("div").style(
-        "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+    side_panel = (
+        ui.element("div")
+        .style(
+            "position: fixed; top: 0; right: 0; width: 50%; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+        )
+        .classes("bg-gray-100 dark:bg-slate-800")
     )
     # compare runs dialog
     compare_dialog = ui.dialog().props("full-width")

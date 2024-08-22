@@ -9,8 +9,12 @@ from .styles import label_with_icon
 
 
 def create_prompts_view(mage: PromptMage):
-    side_panel = ui.element("div").style(
-        "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+    side_panel = (
+        ui.element("div")
+        .style(
+            "position: fixed; top: 0; right: 0; width: 50%; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+        )
+        .classes("bg-gray-100 dark:bg-slate-800")
     )
 
     # prompt editing dialog
@@ -28,11 +32,10 @@ def create_prompts_view(mage: PromptMage):
                 bg_color = ""
                 # highlight active prompt in green
                 if prompt.active:
-                    bg_color = "background-color: #d3fcd5;"
+                    bg_color = "bg-green-200 dark:bg-green-800"
                 with ui.card().style(
                     "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px;"
-                    + bg_color
-                ):
+                ).classes(bg_color):
                     # display run data
                     with ui.grid(columns=2).classes("gap-0"):
                         label_with_icon("Prompt ID:", icon="o_info")

@@ -103,7 +103,7 @@ def execution_graph(flow: PromptMage):
 
 def build_flow_page(flow: PromptMage):
     with ui.row().classes("w-full gap-0"):
-        with ui.splitter().classes("w-full") as splitter:
+        with ui.splitter().classes("w-full p-0") as splitter:
             with splitter.before:
                 with ui.column().classes("w-full items-center"):
                     # Create a card for the mage
