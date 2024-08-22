@@ -1,9 +1,18 @@
+import json
 from typing import List
 from loguru import logger
-from nicegui import ui, app
 from slugify import slugify
+from nicegui import ui, app
 
 from promptmage import PromptMage, RunData
+
+
+def label_with_icon(label: str, icon: str):
+    row = ui.row().classes("gap-2 items-center")
+    with row:
+        ui.icon(icon)
+        ui.label(label)
+    return row
 
 
 def create_runs_view(mage: PromptMage):
@@ -31,17 +40,69 @@ def create_runs_view(mage: PromptMage):
                 "padding: 20px; margin-right: 20px; margin-top: 20px; margin-bottom: 20px; margin-left: 20px"
             ):
                 # display run data
-                ui.label(f"Step Run ID: {run_data.step_run_id}")
-                ui.label(f"Run ID: {run_data.run_id}")
-                ui.label(f"Step Name: {run_data.step_name}")
-                ui.label(f"Status: {run_data.status}")
-                ui.label(f"Run Time: {run_data.run_time}")
-                ui.label(f"Prompt: {run_data.prompt}")
+                with ui.row().classes("w-full"):
+                    with ui.column().classes("gap-0"):
+                        ui.label("Step name").classes("text-sm text-gray-500")
+                        ui.label(f"{run_data.step_name}").classes("text-2xl")
+                    ui.space()
+                    with ui.column().classes("gap-0 items-center"):
+                        ui.label("Status").classes("text-sm text-gray-500")
+                        ui.chip(
+                            f"{run_data.status}",
+                            icon="",
+                            color=f"{'green' if run_data.status == 'success' else 'red'}",
+                        ).props("outline square")
+                with ui.row().classes("w-full"):
+                    with ui.column().classes("gap-0"):
+                        label_with_icon(
+                            "Execution time:", icon="hourglass_bottom"
+                        ).classes("text-sm text-gray-500")
+                        label_with_icon("Run At:", icon="o_schedule").classes(
+                            "text-sm text-gray-500"
+                        )
+                        label_with_icon("Model:", icon="o_psychology").classes(
+                            "text-sm text-gray-500"
+                        )
+                        label_with_icon("Step Run ID:", icon="o_info").classes(
+                            "text-sm text-gray-500"
+                        )
+                        label_with_icon("Run ID:", icon="o_info").classes(
+                            "text-sm text-gray-500"
+                        )
+                    with ui.column().classes("gap-0"):
+                        ui.label(
+                            f"{run_data.execution_time if run_data.execution_time else 0.0:.2f}s"
+                        )
+                        ui.label(f"{run_data.run_time[:19]}")
+                        ui.label(f"{run_data.model}")
+                        ui.label(f"{run_data.step_run_id}")
+                        ui.label(f"{run_data.run_id}")
+
+                if run_data.prompt:
+                    ui.label("Prompt:").classes("text-lg")
+                    with ui.row().classes("w-full"):
+                        with ui.column().classes("gap-0"):
+                            ui.label("Version:").classes("text-sm text-gray-500")
+                            ui.label("ID:").classes("text-sm text-gray-500")
+                            ui.label("System Prompt:").classes("text-sm text-gray-500")
+                            ui.label("User Prompt:").classes("text-sm text-gray-500")
+                        with ui.column().classes("gap-0 w-1/2"):
+                            ui.label(f"{run_data.prompt.version}")
+                            ui.label(f"{run_data.prompt.id}")
+                            ui.label(f"{run_data.prompt.system}")
+                            ui.label(f"{run_data.prompt.user}")
+
                 ui.label("Input Data:").classes("text-lg")
                 for key, value in run_data.input_data.items():
-                    ui.markdown(f"**{key}**: {value}")
+                    ui.markdown(f"**{key}**")
+                    ui.markdown(f"{value}")
                 ui.label("Output Data:").classes("text-lg")
-                ui.markdown(f"{run_data.output_data}")
+                try:
+                    for key, value in run_data.output_data.items():
+                        ui.markdown(f"**{key}**")
+                        ui.markdown(f"{value}")
+                except AttributeError:
+                    ui.markdown(f"{run_data.output_data}")
                 with ui.row():
                     ui.button(
                         "Use in playground",
@@ -136,8 +197,8 @@ def create_runs_view(mage: PromptMage):
             )
 
         # Main UI setup
-        with ui.card().style("padding: 20px"):
-            with ui.row():
+        with ui.card().style("padding: 20px").classes("w-full"):
+            with ui.row().classes("w-full"):
                 ui.button("Compare Runs", on_click=display_comparison).style(
                     "margin-bottom: 20px"
                 )
@@ -147,28 +208,35 @@ def create_runs_view(mage: PromptMage):
                 dataset_select = ui.select(
                     {idx: f"{d.name}-{d.id}" for idx, d in enumerate(datasets)},
                     value=None,
-                )
+                    label="Select Dataset",
+                ).classes("w-1/3")
             # Create a table with clickable rows
             columns = [
+                {
+                    "name": "run_time",
+                    "label": "Run At",
+                    "field": "run_time",
+                    "sortable": True,
+                },
+                {
+                    "name": "status",
+                    "label": "Status",
+                    "field": "status",
+                    "sortable": True,
+                },
+                {"name": "name", "label": "Name", "field": "name", "sortable": True},
+                {
+                    "name": "execution_time",
+                    "label": "Execution Time (in seconds)",
+                    "field": "execution_time",
+                    "sortable": True,
+                },
                 {
                     "name": "run_id",
                     "label": "run_id",
                     "field": "run_id",
                 },
                 {"name": "step_run_id", "label": "step_run_id", "field": "step_run_id"},
-                {"name": "name", "label": "name", "field": "name", "sortable": True},
-                {
-                    "name": "status",
-                    "label": "status",
-                    "field": "status",
-                    "sortable": True,
-                },
-                {
-                    "name": "run_time",
-                    "label": "run_time",
-                    "field": "run_time",
-                    "sortable": True,
-                },
             ]
 
             rows = [
@@ -177,7 +245,12 @@ def create_runs_view(mage: PromptMage):
                     "step_run_id": run_data.step_run_id,
                     "name": run_data.step_name,
                     "status": run_data.status,
-                    "run_time": run_data.run_time,
+                    "run_time": run_data.run_time[:19],
+                    "execution_time": (
+                        round(run_data.execution_time, 3)
+                        if run_data.execution_time
+                        else -1
+                    ),
                 }
                 for run_data in runs
             ]

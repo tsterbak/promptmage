@@ -62,7 +62,7 @@ class PromptMage:
         many_to_one: bool = False,
         pass_through_inputs: List[str] | None = None,
     ) -> Callable:
-        """Decorator to add a step to the PromptMage instance.
+        """Decorator to register a step to the PromptMage instance.
 
         Args:
             name (str): The name of the step.

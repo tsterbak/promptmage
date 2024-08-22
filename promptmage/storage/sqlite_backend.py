@@ -18,6 +18,7 @@ from sqlalchemy import (
     Boolean,
     text,
     and_,
+    Float,
 )
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
@@ -70,7 +71,15 @@ class PromptModel(Base):
         )
 
     def __repr__(self):
-        return f"PromptModel(id={self.id}, name={self.name}, active={self.active}, system={self.system}, user={self.user}, version={self.version}, template_vars={self.template_vars})"
+        return (
+            f"PromptModel(id={self.id}, "
+            f"name={self.name}, "
+            f"active={self.active}, "
+            f"system={self.system}, "
+            f"user={self.user}, "
+            f"version={self.version}, "
+            f"template_vars={self.template_vars})"
+        )
 
 
 class SQLitePromptBackend(StorageBackend):
@@ -124,7 +133,6 @@ class SQLitePromptBackend(StorageBackend):
             existing_prompt.system = prompt.system
             existing_prompt.user = prompt.user
             existing_prompt.active = prompt.active
-            existing_prompt.template_vars = ",".join(prompt.template_vars)
 
             session.commit()
         except SQLAlchemyError as e:
@@ -207,6 +215,8 @@ class RunDataModel(Base):
     __tablename__ = "data"
     step_run_id = Column(String, primary_key=True)
     run_time = Column(String, nullable=False)
+    execution_time = Column(Float, nullable=True)
+    model = Column(String, nullable=True)
     step_name = Column(String, nullable=False)
     run_id = Column(String)
     status = Column(String, nullable=False)
@@ -221,6 +231,8 @@ class RunDataModel(Base):
             "step_name": self.step_name,
             "run_id": self.run_id,
             "status": self.status,
+            "execution_time": self.execution_time,
+            "model": self.model,
             "prompt": Prompt(**json.loads(self.prompt)) if self.prompt else None,
             "input_data": json.loads(self.input_data),
             "output_data": json.loads(self.output_data),
@@ -234,13 +246,26 @@ class RunDataModel(Base):
             step_name=data["step_name"],
             run_id=data["run_id"],
             status=data["status"],
+            execution_time=data["execution_time"],
+            model=data["model"],
             prompt=json.dumps(data["prompt"]) if data["prompt"] else None,
             input_data=json.dumps(data["input_data"]),
             output_data=json.dumps(data["output_data"]),
         )
 
     def __repr__(self):
-        return f"RunDataModel(step_run_id={self.step_run_id}, run_time={self.run_time}, step_name={self.step_name}, run_id={self.run_id}, status={self.status}, prompt={self.prompt}, input_data={self.input_data}, output_data={self.output_data})"
+        return (
+            f"RunDataModel(step_run_id={self.step_run_id}, "
+            f"run_time={self.run_time}, "
+            f"step_name={self.step_name}, "
+            f"run_id={self.run_id}, "
+            f"status={self.status}, "
+            f"prompt={self.prompt}, "
+            f"execution_time={self.execution_time}, "
+            f"model={self.model}, "
+            f"input_data={self.input_data}, "
+            f"output_data={self.output_data})"
+        )
 
 
 class EvaluationDatasetModel(Base):
