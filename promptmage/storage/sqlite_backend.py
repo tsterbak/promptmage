@@ -130,10 +130,15 @@ class SQLitePromptBackend(StorageBackend):
                     f"Prompt with name {prompt.name} not found."
                 )
 
-            existing_prompt.system = prompt.system
-            existing_prompt.user = prompt.user
-            existing_prompt.active = prompt.active
-            existing_prompt.version += 1
+            # If changes are made to user prompt and system prompt
+            if (existing_prompt.system != prompt.system or existing_prompt.user != prompt.user):
+                existing_prompt.system = prompt.system
+                existing_prompt.user = prompt.user
+                existing_prompt.active = prompt.active
+                existing_prompt.version += 1
+            # If made no changes made to user prompt and system prompt
+            else:
+                existing_prompt.active = prompt.active
 
             session.commit()
         except SQLAlchemyError as e:
