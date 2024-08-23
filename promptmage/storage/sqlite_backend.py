@@ -133,6 +133,7 @@ class SQLitePromptBackend(StorageBackend):
             existing_prompt.system = prompt.system
             existing_prompt.user = prompt.user
             existing_prompt.active = prompt.active
+            existing_prompt.version += 1
 
             session.commit()
         except SQLAlchemyError as e:
