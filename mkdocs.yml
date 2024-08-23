@@ -7,11 +7,11 @@ repo_name: tsterbak/promptmage
 copyright: Copyright &copy; 2024 PromptMage
 
 nav:
-  - index.md
-  - About: about.md
-  - 'Getting Started':
-    - Tutorial: tutorial.md
-    - Walkthrough: walkthrough.md
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Tutorials: tutorial.md
+  - API Reference: reference.md
+  - Walkthrough: walkthrough.md
   - License: license.md
 
 theme:
@@ -26,9 +26,10 @@ theme:
     - search
     - search.suggest
     - content.code.copy
+    - content.code.annotate
     - navigation.tracking
     - navigation.tabs
-    - navigation.tabs.sticky
+    #- navigation.tabs.sticky
     - navigation.sections
     - toc.integrate 
     - navigation.top
@@ -56,6 +57,7 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - admonition
+  - def_list
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -66,6 +68,9 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 
 plugins:

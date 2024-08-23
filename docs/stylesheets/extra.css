@@ -13,7 +13,6 @@
     justify-content: space-between;
     background-color: var(--md-default-bg-color);
     margin-bottom: 40px;
-    border-radius: 6px;
 }
 
 .hero-image {
@@ -24,7 +23,7 @@
 .hero-image img {
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 .hero-content {

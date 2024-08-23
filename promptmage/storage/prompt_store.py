@@ -46,7 +46,7 @@ class PromptStore:
                 system="You are a helpful assistant.",
                 user="",
                 template_vars=[],
-                active=True,
+                active=False,
             )
 
     def get_prompt_by_id(self, prompt_id: str) -> Prompt:
