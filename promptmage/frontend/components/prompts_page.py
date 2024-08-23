@@ -5,11 +5,16 @@ from typing import List
 
 from promptmage import PromptMage
 from promptmage.prompt import Prompt
+from .styles import label_with_icon
 
 
 def create_prompts_view(mage: PromptMage):
-    side_panel = ui.element("div").style(
-        "position: fixed; top: 0; right: 0; width: 50%; height: 100%; background-color: #f0f0f0; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+    side_panel = (
+        ui.element("div")
+        .style(
+            "position: fixed; top: 0; right: 0; width: 50%; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
+        )
+        .classes("bg-gray-100 dark:bg-slate-800")
     )
 
     # prompt editing dialog
@@ -24,19 +29,39 @@ def create_prompts_view(mage: PromptMage):
                 "margin: 20px; margin-bottom: 0px; margin-top: 100px;"
             )
             for prompt in sorted(prompts, key=lambda p: p.version, reverse=True):
+                bg_color = ""
+                # highlight active prompt in green
+                if prompt.active:
+                    bg_color = "bg-green-200 dark:bg-green-800"
                 with ui.card().style(
-                    "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px"
-                ):
+                    "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px;"
+                ).classes(bg_color):
                     # display run data
-                    ui.label(f"Prompt ID: {prompt.id}")
-                    ui.label(f"Name: {prompt.name}")
-                    ui.label(f"Version: {prompt.version}")
-                    ui.label(f"System prompt: {prompt.system}")
-                    ui.label(f"User prompt: {prompt.user}")
+                    with ui.grid(columns=2).classes("gap-0"):
+                        label_with_icon("Prompt ID:", icon="o_info")
+                        ui.label(f"{prompt.id}")
+
+                        label_with_icon("Name:", icon="o_badge")
+                        ui.label(f"{prompt.name}")
+
+                        label_with_icon("Version:", icon="o_tag")
+                        ui.label(f"{prompt.version}")
+
+                        label_with_icon("Active:", icon="o_check")
+                        ui.label(f"{prompt.active}")
+
+                        label_with_icon("System prompt:", icon="o_code")
+                        ui.label(f"{prompt.system}")
+
+                        label_with_icon("User prompt:", icon="o_psychology")
+                        ui.label(f"{prompt.user}")
+
                     with ui.row():
                         ui.button(
-                            "Use Prompt",
-                            on_click=lambda prompt_id=prompt.id: use_prompt(prompt_id),
+                            "Activate Prompt",
+                            on_click=lambda prompt_id=prompt.id: activate_prompt(
+                                prompt_id
+                            ),
                         )
                         ui.button(
                             "Edit Prompt",
@@ -54,6 +79,8 @@ def create_prompts_view(mage: PromptMage):
     def delete_prompt(prompt_id):
         logger.info(f"Deleting prompt with ID: {prompt_id}.")
         mage.prompt_store.delete_prompt(prompt_id)
+        ui.notify(f"Prompt {prompt_id} deleted.")
+        side_panel.update()
 
     def edit_prompt(prompt_id):
         logger.info(f"Editing prompt with ID: {prompt_id}.")
@@ -83,8 +110,19 @@ def create_prompts_view(mage: PromptMage):
 
         dialog.open()
 
-    def use_prompt(prompt_id):
-        logger.info(f"Using prompt with ID: {prompt_id}. Not implemented yet.")
+    def activate_prompt(prompt_id):
+        logger.info(f"Activating prompt with ID: {prompt_id}.")
+        # activate the selected prompt
+        prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
+        prompt.active = True
+        mage.prompt_store.update_prompt(prompt)
+        # deactivate all other prompts with the same name
+        for p in mage.prompt_store.get_prompts():
+            if p.name == prompt.name and p.id != prompt_id:
+                p.active = False
+                mage.prompt_store.update_prompt(p)
+        ui.notify(f"Prompt {prompt_id} activated.")
+        side_panel.update()
 
     def save_prompt(prompt_id: str, system: str, user: str):
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
@@ -100,7 +138,6 @@ def create_prompts_view(mage: PromptMage):
         side_panel.update()
 
     def build_ui():
-        ui.label("Prompts").classes("text-2xl")
         all_prompts = mage.prompt_store.get_prompts()
         # group them by name
         prompts = defaultdict(list)

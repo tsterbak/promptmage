@@ -1,4 +1,5 @@
 import uuid
+import time
 import inspect
 from typing import Callable, List
 from loguru import logger
@@ -76,7 +77,9 @@ class MageStep:
         self._input_callbacks = []
         self._output_callbacks = []
 
-    def execute(self, **inputs):
+    def execute(
+        self, prompt: Prompt | None = None, active: bool | None = None, **inputs
+    ):
         """Execute the step with the given inputs."""
         logger.info(f"Executing step: {self.name}...")
         multi_input_param = None
@@ -91,14 +94,18 @@ class MageStep:
             self.input_values["model"] = self.model
         # get the prompt and set it if exists
         if self.prompt_name:
-            prompt = self.get_prompt()
-            self.input_values["prompt"] = prompt
+            if prompt:
+                self.input_values["prompt"] = prompt
+            else:
+                prompt = self.get_prompt(active=active)
+                self.input_values["prompt"] = prompt
         else:
             prompt = None
         # run the input callbacks
         for callback in self._input_callbacks:
             callback()
         # execute the function and store the result
+        start_time = time.time()
         try:
             if self.one_to_many:
                 logger.info("Executing step one-to-many")
@@ -121,10 +128,12 @@ class MageStep:
                 self.result = self.func(**self.input_values)
             status = "success"
         except Exception as e:
+            logger.error(f"Error executing step: {e}")
             self.result = MageResult(error=f"Error: {e}")
             status = "failed"
+        execution_time = time.time() - start_time
         # store the run data
-        self.store_run(prompt=prompt, status=status)
+        self.store_run(prompt=prompt, status=status, execution_time=execution_time)
         # run the output callbacks
         for callback in self._output_callbacks:
             callback()
@@ -132,10 +141,17 @@ class MageStep:
         return self.result
 
     def __repr__(self):
-        return f"Step(step_id={self.step_id}, name={self.name}, prompt_name={self.prompt_name}, depends_on={self.depends_on})"
+        return (
+            f"Step(step_id={self.step_id}, "
+            f"name={self.name}, "
+            f"prompt_name={self.prompt_name}, "
+            f"depends_on={self.depends_on})"
+        )
 
-    def get_prompt(self) -> Prompt:
-        return self.prompt_store.get_prompt(self.prompt_name)
+    def get_prompt(
+        self, version: int | None = None, active: bool | None = None
+    ) -> Prompt:
+        return self.prompt_store.get_prompt(self.prompt_name, version, active)
 
     def set_prompt(self, prompt: Prompt):
         prompt.id = str(uuid.uuid4())
@@ -146,6 +162,7 @@ class MageStep:
         self,
         prompt: Prompt | None = None,
         status: str = "success",
+        execution_time: float = 0.0,
     ):
         """Store the run data in the data store."""
         if self.data_store:
@@ -164,6 +181,7 @@ class MageStep:
                 ),
                 status=status,
                 model=self.model,
+                execution_time=execution_time,
             )
             self.data_store.store_data(run_data)
 

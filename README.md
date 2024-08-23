@@ -28,7 +28,7 @@
 
 The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
 
-![PromptMage](docs/images/screenshots/playground-finished.png)
+![PromptMage](https://github.com/tsterbak/promptmage/tree/main/docs/images/screenshots)
 
 Take the [walkthrough](https://promptmage.io/walkthrough/) to see what you can do with PromptMage.
 

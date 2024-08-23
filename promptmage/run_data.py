@@ -19,6 +19,7 @@ class RunData:
         run_id: str = str(uuid.uuid4()),
         step_run_id: str | None = None,
         run_time: datetime | None = None,
+        execution_time: float | None = None,  # execution_time in seconds
         status: str | None = None,
         model: str | None = None,
     ):
@@ -26,6 +27,7 @@ class RunData:
         self.run_id = run_id
         self.step_name = step_name
         self.run_time = run_time if run_time else str(datetime.now())
+        self.execution_time = execution_time
         self.prompt = prompt
         self.input_data = input_data
         self.output_data = output_data
@@ -39,6 +41,7 @@ class RunData:
             f"step_name={self.step_name}, "
             f"status={self.status}, "
             f"run_time={self.run_time}, "
+            f"execution_time={self.execution_time}, "
             f"prompt={self.prompt}, "
             f"input_data={self.input_data}, "
             f"output_data={self.output_data}, "
@@ -54,6 +57,8 @@ class RunData:
             "run_id": self.run_id,
             "step_run_id": self.step_run_id,
             "run_time": self.run_time,
+            "model": self.model,
+            "execution_time": self.execution_time,
             "status": self.status,
         }
 
@@ -67,4 +72,7 @@ class RunData:
             data["run_id"],
             data["step_run_id"],
             data["run_time"],
+            data["status"],
+            data["model"],
+            data["execution_time"],
         )

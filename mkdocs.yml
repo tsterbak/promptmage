@@ -6,51 +6,78 @@ repo_url: https://github.com/tsterbak/promptmage
 repo_name: tsterbak/promptmage
 copyright: Copyright &copy; 2024 PromptMage
 
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Tutorials: tutorial.md
+  - API Reference: reference.md
+  - Walkthrough: walkthrough.md
+  - License: license.md
+
 theme:
   name: material
   logo: images/promptmage-logo.png
   favicon: images/favicon-32x32.png
   icon:
     repo: fontawesome/brands/git-alt
+    annotation: material/plus-circle-outline
 
   features:
+    - search
+    - search.suggest
     - content.code.copy
+    - content.code.annotate
+    - navigation.tracking
     - navigation.tabs
-    - navigation.tabs.sticky
+    #- navigation.tabs.sticky
     - navigation.sections
     - toc.integrate 
+    - navigation.top
 
   palette: 
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/lightbulb-outline
         name: Switch to dark mode
 
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       toggle:
-        icon: material/brightness-4
+        icon: material/lightbulb
         name: Switch to light mode
       
 extra_css:
+  - stylesheets/hides.css
   - stylesheets/extra.css
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - def_list
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.details
   - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
 
 plugins:
     - material-plausible
+    - search:
+        enabled: true
+        lang: en
 
 extra:
   analytics:

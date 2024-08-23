@@ -1,27 +1,93 @@
-<br />
-<div align="center">
-  <a href="https://github.com/tsterbak/promptmage">
-    <img src="images/promptmage-logo.png" alt="PromptMage-Logo" width="120" height="120">
-  </a>
+---
+title: PromptMage
+summary: PromptMage simplifies the process of creating and managing LLM workflows as a self-hosted solution.
+date: 2024-08-23
+authors:
+  - Tobias Sterbak
+hide:
+  - navigation
+extra:
+  class: hide-title
+---
 
-  <h1 align="center">PromptMage</h1>
-
-  <p align="center">
-    simplifies the process of creating and managing LLM workflows as a self-hosted solution.
-  </p>
+<div class="hero">
+    <div class="hero-image">
+        <img src="images/screenshots/plaground-dark.png" alt="PromptMage Playground">
+    </div>
+    <div class="hero-content">
+        <h1>Welcome to PromptMage</h1>
+        <p>
+        PromptMage is designed to offer an intuitive interface that simplifies the process of creating and managing complex LLM workflows.
+        </p>
+        <a href="getting-started" class="button">Get Started</a>
+        <a href="tutorial" class="button secondary">Learn More</a>
+    </div>
 </div>
 
-> [!WARNING]
-> This application is currently in alpha state and under active development. Please be aware that the API and features may change at any time.
+!!! warning "WARNING"
+    
+    This application is currently in alpha state and under active development. Please be aware that the API and features may change at any time.
 
+<center>
+<div class="grid cards" markdown>
+
+-   :material-clock-fast:{ .lg .middle } __Set up in 5 minutes__
+
+    ---
+
+    Get PromptMage up and running quickly with simple installation steps. Deploy locally or on your server with ease.
+
+    [:octicons-arrow-right-24: Getting started](getting-started)
+
+-   :fontawesome-brands-github:{ .lg .middle } __Version Control Built-in__
+
+    ---
+
+    Track prompt development with integrated version control, making collaboration and iteration seamless.
+
+    [:octicons-arrow-right-24: Learn more](/getting-started/#prompt-repository)
+
+-   :material-play-box:{ .lg .middle } __Prompt Playground__
+
+    ---
+
+    Test, compare, and refine prompts in an intuitive interface designed for rapid iteration.
+
+    [:octicons-arrow-right-24: Playground](/getting-started/#flow-playground)
+
+-   :material-api:{ .lg .middle } __Auto-generated API__
+
+    ---
+
+    Leverage a FastAPI-powered, automatically created API for easy integration and deployment.
+
+    [:octicons-arrow-right-24: API Documentation](#)
+
+-   :material-check-decagram:{ .lg .middle } __Evaluation Mode__
+
+    ---
+
+    Assess prompt performance through manual and automatic testing, ensuring reliability before deployment.
+
+    [:octicons-arrow-right-24: Evaluation Guide](#)
+
+-   :material-update:{ .lg .middle } __More to Come__
+
+    ---
+
+    Stay tuned for upcoming features and enhancements as we continue to evolve PromptMage.
+
+    [:octicons-arrow-right-24: Roadmap](roadmap)
+
+</div>
+
+</center>
 
 ## About the Project
 
 "PromptMage" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution. It facilitates prompt testing and comparison, and it incorporates version control features to help users track the development of their prompts. Suitable for both small teams and large enterprises, "PromptMage" seeks to improve productivity and foster the practical use of LLM technology.
 
 The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
-
-![PromptMage](images/screenshots/playground-finished.png)
 
 Take the [walkthrough](walkthrough.md) to see what you can do with PromptMage.
 
@@ -32,34 +98,6 @@ Take the [walkthrough](walkthrough.md) to see what you can do with PromptMage.
 - Easy sharing of results with domain experts and stakeholders
 - build-in, automatically created API with fastAPI for easy integration and deployment
 - Type-hint everything for automatic inference and validation magic
-
-## Getting Started
-
-### Installation
-
-To install promptmage, run the following command:
-
-```bash
-pip install promptmage 
-```
-
-## Usage
-
-To use promptmage, run the following command:
-
-```bash
-promptmage run <path-to-flow>
-```
-
-This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000/gui/`.
-
-Have a look at the examples in the [examples](https://github.com/tsterbak/promptmage/tree/main/examples) folder to see how to use promptmage in your application or workflow.
-
-
-## Use with Docker
-
-You can find an usage example with docker here: [Docker example](https://github.com/tsterbak/promptmage/tree/main/examples/docker).
-
 
 ## Development
 
@@ -75,11 +113,6 @@ We welcome contributions from the community! If you're interested in improving P
 * **Feature Requests**: Have ideas on how to make PromptMage better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
 * **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
 
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/tsterbak/promptmage/blob/main/LICENSE.md) file for details.
-Original development by [Tobias Sterbak](https://tobiassterbak.com). Copyright (C) 2024.
 
 ## Contact
 For any inquiries or further information, feel free to reach out at [promptmage@tobiassterbak.com](mailto:promptmage@tobiassterbak.com).

@@ -67,10 +67,6 @@ def execution_graph(flow: PromptMage):
         ui.label("Execution Result will be shown here.")
 
     if flow.execution_results:
-        for result in flow.execution_results:
-            logger.info(
-                f"{result.get('step')}, {result.get('current_result_id')}, {result.get('previous_result_ids')}, {result.get('results',{}).keys()}"
-            )
         graph, id_to_step_name, id_to_result = render_mermaid_diagram(
             flow.execution_results
         )
@@ -94,7 +90,6 @@ def execution_graph(flow: PromptMage):
 
         ui.mermaid(graph, config={"securityLevel": "loose"}).classes("w-2/3")
         ui.on("graph_click", lambda e: node_dialog(e.args))
-        logger.info(graph)
     elif flow.is_running:
         ui.spinner("puff", size="xl")
     else:
@@ -103,7 +98,7 @@ def execution_graph(flow: PromptMage):
 
 def build_flow_page(flow: PromptMage):
     with ui.row().classes("w-full gap-0"):
-        with ui.splitter().classes("w-full") as splitter:
+        with ui.splitter().classes("w-full p-0") as splitter:
             with splitter.before:
                 with ui.column().classes("w-full items-center"):
                     # Create a card for the mage

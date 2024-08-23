@@ -115,7 +115,9 @@ class PromptMageAPI:
                 step_list.append({"name": step_name, "path": path})
 
             # create an endpoint to run the full dependency graph of the flow
-            run_function = self.mage.get_run_function()
+            run_function = self.mage.get_run_function(
+                active_prompts=True
+            )  # use only active prompts
             signature = inspect.signature(run_function)
             path = f"/api/{slugify(flow.name)}/run_flow"
             params, path_variables = self._parameters_from_signature(signature)

@@ -19,11 +19,22 @@ class PromptStore:
         logger.info(f"Storing prompt: {prompt}")
         self.backend.store_prompt(prompt)
 
-    def get_prompt(self, prompt_name: str) -> Prompt:
-        """Retrieve a prompt from the backend."""
+    def get_prompt(
+        self, prompt_name: str, version: int | None = None, active: bool | None = None
+    ) -> Prompt:
+        """Retrieve a prompt from the backend.
+
+        Args:
+            prompt_name (str): The name of the prompt to retrieve.
+            version (int): The version of the prompt to retrieve.
+            active (bool): Whether to retrieve only the active prompt.
+
+        Returns:
+            Prompt: The retrieved prompt.
+        """
         logger.info(f"Retrieving prompt with name: {prompt_name}")
         try:
-            return self.backend.get_prompt(prompt_name)
+            return self.backend.get_prompt(prompt_name, version, active)
         except PromptNotFoundException:
             logger.error(
                 f"Prompt with ID {prompt_name} not found, returning an empty prompt."
@@ -35,6 +46,7 @@ class PromptStore:
                 system="You are a helpful assistant.",
                 user="",
                 template_vars=[],
+                active=False,
             )
 
     def get_prompt_by_id(self, prompt_id: str) -> Prompt:

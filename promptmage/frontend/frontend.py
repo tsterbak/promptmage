@@ -37,7 +37,7 @@ class PromptMageFrontend:
         @ui.page("/{flow_name}", title="PromptMage - Flow")
         def flow_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Playground {flow_name}", flow_name=flow_name):
+            with theme.frame("Playground", flow_name=flow_name):
                 build_flow_page(self.flows_dict[flow_name])
 
         @ui.page("/runs/{flow_name}", title="PromptMage - Runs")
@@ -49,7 +49,7 @@ class PromptMageFrontend:
         @ui.page("/prompts/{flow_name}", title="PromptMage - Prompts")
         def prompts_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Prompts Overview _ {flow_name}", flow_name=flow_name):
+            with theme.frame(f"Prompts Overview - {flow_name}", flow_name=flow_name):
                 create_prompts_view(self.current_flow)()
 
         @ui.page("/evaluation/{flow_name}", title="PromptMage - Evaluation")
@@ -73,6 +73,6 @@ class PromptMageFrontend:
             fastapi_app,
             mount_path="/gui",  # NOTE this can be omitted if you want the paths passed to @ui.page to be at the root
             storage_secret="pick your private secret here",  # NOTE setting a secret is optional but allows for persistent storage per user
-            dark=False,
+            dark=True,
             favicon="🧙",
         )
