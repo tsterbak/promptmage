@@ -1,19 +1,33 @@
-<br />
-<div align="center">
-  <a href="https://github.com/tsterbak/promptmage">
-    <img src="images/promptmage-logo.png" alt="PromptMage-Logo" width="120" height="120">
-  </a>
+---
+title: PromptMage
+summary: PromptMage simplifies the process of creating and managing LLM workflows as a self-hosted solution.
+date: 2024-08-23
+authors:
+  - Tobias Sterbak
+hide:
+  - navigation
+extra:
+  class: hide-title
+---
 
-  <h1 align="center">PromptMage</h1>
-
-  <p align="center">
-    simplifies the process of creating and managing LLM workflows as a self-hosted solution.
-  </p>
+<div class="hero">
+    <div class="hero-image">
+        <img src="images/screenshots/plaground-dark.png" alt="PromptMage Playground">
+    </div>
+    <div class="hero-content">
+        <h1>Welcome to PromptMage</h1>
+        <p>
+        PromptMage is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows.
+        </p>
+        <a href="getting-started/" class="button">Get Started</a>
+        <a href="about/" class="button secondary">Learn More</a>
+    </div>
 </div>
 
-> [!WARNING]
-> This application is currently in alpha state and under active development. Please be aware that the API and features may change at any time.
-
+!!! warning "WARNING"
+    
+    This application is currently in alpha state and under active development. Please be aware that the API and features may change at any time.
+  
 
 ## About the Project
 
@@ -75,11 +89,6 @@ We welcome contributions from the community! If you're interested in improving P
 * **Feature Requests**: Have ideas on how to make PromptMage better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
 * **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
 
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/tsterbak/promptmage/blob/main/LICENSE.md) file for details.
-Original development by [Tobias Sterbak](https://tobiassterbak.com). Copyright (C) 2024.
 
 ## Contact
 For any inquiries or further information, feel free to reach out at [promptmage@tobiassterbak.com](mailto:promptmage@tobiassterbak.com).
