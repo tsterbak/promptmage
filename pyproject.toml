@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "promptmage"
-version = "0.1.1"
+version = "0.1.2"
 description = "\"PromptMage\" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution."
 authors = ["Tobias Sterbak <github@tobiassterbak.com>"]
 license = "MIT"
