@@ -141,7 +141,7 @@ class SQLitePromptBackend(StorageBackend):
 
             if not existing_prompt:
                 raise PromptNotFoundException(
-                    f"Prompt with name {prompt.name} not found."
+                    f"Prompt with name {prompt.name} and {prompt.id} not found."
                 )
 
             # If changes are made to user prompt and system prompt

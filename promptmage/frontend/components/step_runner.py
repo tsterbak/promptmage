@@ -91,9 +91,15 @@ def create_function_runner(step: MageStep):
         nonlocal prompt
         system_prompt_field.update()
         user_prompt_field.update()
-        prompt.system = system_prompt_field.value
-        prompt.user = user_prompt_field.value
-        step.set_prompt(prompt)
+        if (prompt.system != system_prompt_field.value) or (
+            prompt.user != user_prompt_field.value
+        ):
+            prompt.system = system_prompt_field.value
+            prompt.user = user_prompt_field.value
+            step.set_prompt(prompt)
+            ui.notify("Prompt saved.")
+        else:
+            ui.notify("Prompt unchanged. Not saved.")
 
     def update_inputs():
         for name, field in input_output_section.fields.items():

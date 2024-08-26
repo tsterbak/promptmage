@@ -154,9 +154,8 @@ class MageStep:
         return self.prompt_store.get_prompt(self.prompt_name, version, active)
 
     def set_prompt(self, prompt: Prompt):
-        prompt.id = str(uuid.uuid4())
-        prompt.version = prompt.version + 1
-        self.prompt_store.store_prompt(prompt)
+        prompt.active = False
+        self.prompt_store.update_prompt(prompt)
 
     def store_run(
         self,
