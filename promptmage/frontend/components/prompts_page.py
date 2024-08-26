@@ -126,6 +126,12 @@ def create_prompts_view(mage: PromptMage):
 
     def save_prompt(prompt_id: str, system: str, user: str):
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
+
+        if (prompt.system != system) or ( prompt.user != user ):
+            ui.notify("Prompt saved.")
+        else:
+            ui.notify("Prompt unchanged. Not saved.")
+            
         prompt.system = system
         prompt.user = user
         mage.prompt_store.update_prompt(prompt)
