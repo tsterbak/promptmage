@@ -22,7 +22,7 @@ class InputOutputSection:
 
     @ui.refreshable
     def ui(self):
-        ui.label("Inputs:").classes("font-bold")
+        ui.label("Inputs:").classes("font-bold mr-5")
         for param in self.step.signature.parameters.values():
             if param.name not in ["prompt", "model"]:
                 with ui.row():

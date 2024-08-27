@@ -222,8 +222,6 @@ def build_dataset_page(flow: PromptMage, dataset_id: str):
                     color="primary",
                 ).classes("w-full")
 
-            # Main UI setup
-            with ui.card().classes("w-full"):
                 # Create a table with clickable rows
                 columns = [
                     {

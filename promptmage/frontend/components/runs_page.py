@@ -114,11 +114,6 @@ def create_runs_view(mage: PromptMage):
         side_panel.style("transform:translateX(100%);")
         side_panel.update()
 
-    # rating function
-    def rate_run(step_run_id, rating):
-        logger.info(f"Rating run {step_run_id} with {rating}")
-        ui.notify("Not implemented yet. Run rated successfully.")
-
     def build_ui():
         runs: List[RunData] = mage.get_run_data()
 
@@ -159,20 +154,13 @@ def create_runs_view(mage: PromptMage):
                                 "flex-grow: 1; display: flex; flex-direction: column;"
                             ):
                                 ui.label(f"step_run_id: {run_data['step_run_id']}")
-                                ui.markdown(f"{run.output_data}")
-                                with ui.button_group().style("margin-top: auto;"):
-                                    ui.button(
-                                        icon="thumb_up",
-                                        on_click=lambda: rate_run(
-                                            run.step_run_id, "up"
-                                        ),
-                                    )
-                                    ui.button(
-                                        icon="thumb_down",
-                                        on_click=lambda: rate_run(
-                                            run.step_run_id, "down"
-                                        ),
-                                    )
+                                ui.label("Output Data:").classes("text-lg")
+                                try:
+                                    for key, value in run.output_data.items():
+                                        ui.markdown(f"**{key}**")
+                                        ui.markdown(f"{value}")
+                                except AttributeError:
+                                    ui.markdown(f"{run.output_data}")
 
                 ui.button("Close", on_click=compare_dialog.close)
             compare_dialog.open()
