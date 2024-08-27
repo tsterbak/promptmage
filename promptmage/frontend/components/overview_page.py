@@ -27,4 +27,6 @@ def create_grid(elements, columns=4):
 
 
 def build_overview_page(flows: List[PromptMage]):
-    create_grid(flows, columns=4)
+    with ui.column():
+        ui.label("Available Flows").classes("font-bold text-lg")
+        create_grid(flows, columns=4)

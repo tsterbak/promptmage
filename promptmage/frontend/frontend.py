@@ -30,7 +30,8 @@ class PromptMageFrontend:
         @ui.page("/", title="PromptMage")
         def main_page():
             with theme.frame(
-                "Welcome to the PromptMage", flow_name=slugify(self.current_flow.name)
+                "Welcome to the PromptMage GUI",
+                flow_name=slugify(self.current_flow.name),
             ):
                 build_overview_page(self.flows)
 
