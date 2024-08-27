@@ -52,13 +52,6 @@ class PromptMageAPI:
             index_file_path = f"{static_files_path}/index.html"
             return FileResponse(index_file_path)
 
-            return HTMLResponse(
-                """<h1>Welcome to the PromptMage</h1>"""
-                """<h2>To see the API docs 📖, go to <a href='/docs'>/docs</a></h2>"""
-                """<h2>To access the API 🔮, go to <a href='/api'>/api</a></h2>"""
-                """<h2>To access the GUI 🧙, go to <a href='/gui'>/gui</a></h2>"""
-            )
-
         # create index API endpoint
         @app.get("/api")
         async def root():
