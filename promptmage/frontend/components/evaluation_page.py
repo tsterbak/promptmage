@@ -45,9 +45,17 @@ def create_grid(elements, flow, columns: int = 4):
             for j in range(columns):
                 if i == j == 0:
                     with ui.card().style("padding: 20px; margin: 10px;"):
+                        dataset_name = ui.label("New dataset")
+                        dataset_name.set_visibility(False)
+                        ui.input(
+                            label="New dataset name",
+                            placeholder="Start typing",
+                            on_change=lambda e: dataset_name.set_text(e.value),
+                        )
                         ui.button(
                             "Create dataset",
-                            on_click=lambda: create_dataset("New Dataset", flow),
+                            icon="add",
+                            on_click=lambda: create_dataset(dataset_name.text, flow),
                         )
 
                 else:

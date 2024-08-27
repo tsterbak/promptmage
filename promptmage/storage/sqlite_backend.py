@@ -37,6 +37,20 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
+def get_next_version(session, name):
+    """
+    This function retrieves the next version number for a given name.
+    """
+    max_version = session.execute(
+        select(func.max(PromptModel.version)).where(PromptModel.name == name)
+    ).scalar()
+
+    if max_version is None:
+        return 1
+    else:
+        return max_version + 1
+
+
 class PromptModel(Base):
     __tablename__ = "prompts"
     id = Column(String, primary_key=True)
@@ -127,12 +141,24 @@ class SQLitePromptBackend(StorageBackend):
 
             if not existing_prompt:
                 raise PromptNotFoundException(
-                    f"Prompt with name {prompt.name} not found."
+                    f"Prompt with name {prompt.name} and {prompt.id} not found."
                 )
 
-            existing_prompt.system = prompt.system
-            existing_prompt.user = prompt.user
-            existing_prompt.active = prompt.active
+            # If changes are made to user prompt and system prompt
+            if (
+                existing_prompt.system != prompt.system
+                or existing_prompt.user != prompt.user
+            ):
+                new_prompt = PromptModel.from_dict(prompt.to_dict())
+                new_prompt.version = get_next_version(session, prompt.name)
+                new_prompt.id = generate_uuid()
+                if prompt.active:
+                    new_prompt.active = True
+                    existing_prompt.active = False
+                session.add(new_prompt)
+            # If made no changes made to user prompt and system prompt
+            else:
+                existing_prompt.active = prompt.active
 
             session.commit()
         except SQLAlchemyError as e:

@@ -10,7 +10,7 @@ from slugify import slugify
 
 from fastapi import FastAPI, Path, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -40,7 +40,7 @@ class PromptMageAPI:
 
         static_files_path = pkg_resources.resource_filename("promptmage", "static/")
         app.mount(
-            "/static/",
+            "/static",
             StaticFiles(directory=static_files_path, html=True),
             name="static",
         )
@@ -48,12 +48,9 @@ class PromptMageAPI:
         # create index endpoint
         @app.get("/")
         async def index():
-            return HTMLResponse(
-                """<h1>Welcome to the PromptMage</h1>"""
-                """<h2>To see the API docs 📖, go to <a href='/docs'>/docs</a></h2>"""
-                """<h2>To access the API 🔮, go to <a href='/api'>/api</a></h2>"""
-                """<h2>To access the GUI 🧙, go to <a href='/gui'>/gui</a></h2>"""
-            )
+            # Construct the absolute path to the index.html file
+            index_file_path = f"{static_files_path}/index.html"
+            return FileResponse(index_file_path)
 
         # create index API endpoint
         @app.get("/api")

@@ -22,7 +22,7 @@ mage = PromptMage(
 
 @mage.step(name="extract", prompt_name="extract_facts", initial=True)
 def extract_facts(
-    article: str, prompt: Prompt, model: str = "gpt-4o-mini"
+    article: str, focus: str | None, prompt: Prompt, model: str = "gpt-4o-mini"
 ) -> List[MageResult]:
     """Extract the facts as a bullet list from an article."""
     response = client.chat.completions.create(
@@ -31,7 +31,7 @@ def extract_facts(
             {"role": "system", "content": prompt.system},
             {
                 "role": "user",
-                "content": prompt.user.format(article=article),
+                "content": prompt.user.format(article=article, focus=focus),
             },
         ],
     )
@@ -46,7 +46,7 @@ def extract_facts(
     name="check_facts",
     prompt_name="check_facts",
 )
-def check_facts(fact: str, prompt: Prompt) -> MageResult:
+def check_facts(fact: str, prompt: Prompt, model: str = "gpt-4o-mini") -> MageResult:
     """Check the extracted facts for accuracy."""
     response = client.chat.completions.create(
         model="gpt-4o-mini",

@@ -23,6 +23,7 @@ def test_store_prompt(prompt_sqlite_backend):
         user="test",
         version=1,
         template_vars=["test"],
+        active=False,
     )
 
     prompt_sqlite_backend.store_prompt(prompt)
@@ -39,6 +40,7 @@ def test_store_prompt(prompt_sqlite_backend):
         prompt.user,
         prompt.version,
         ",".join(prompt.template_vars),
+        prompt.active,
     )
 
 
@@ -114,6 +116,9 @@ def test_store_run_data(data_sqlite_backend):
         input_data={"test": "test"},
         output_data={"test": "test"},
         status="test",
+        model="test",
+        execution_time=1.0,
+        run_time="test",
     )
 
     data_sqlite_backend.store_data(run_data)
@@ -126,7 +131,7 @@ def test_store_run_data(data_sqlite_backend):
 
     assert row[0] == run_data.step_run_id
     assert row[1] == run_data.run_time
-    assert row[2] == run_data.step_name
+    assert row[2] == run_data.execution_time
 
 
 def test_get_run_data(data_sqlite_backend):
