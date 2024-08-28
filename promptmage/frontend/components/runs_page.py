@@ -154,6 +154,16 @@ def create_runs_view(mage: PromptMage):
                                 "flex-grow: 1; display: flex; flex-direction: column;"
                             ):
                                 ui.label(f"step_run_id: {run_data['step_run_id']}")
+                                ui.label("Prompt:").classes("text-lg")
+                                with ui.row().classes("w-full"):
+                                    with ui.column().classes("gap-0"):
+                                        ui.label("Version:").classes("text-sm text-gray-500")
+                                        ui.label("System Prompt:").classes("text-sm text-gray-500")
+                                        ui.label("User Prompt:").classes("text-sm text-gray-500")
+                                    with ui.column().classes("gap-0 w-1/2"):
+                                        ui.label(f"{run.prompt.version}")
+                                        ui.label(f"{run.prompt.system}")
+                                        ui.label(f"{run.prompt.user}")
                                 ui.label("Output Data:").classes("text-lg")
                                 try:
                                     for key, value in run.output_data.items():
