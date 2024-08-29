@@ -42,7 +42,7 @@ Take the [walkthrough](https://promptmage.io/walkthrough/) to see what you can d
 
 ## Projects using PromptMage
 
-- [product-review-research](https://github.com/tsterbak/product-review-research) An AI webapp build with PromptMage to provide in-depth analysis for products by researching trustworthy online reviews. 
+- [product-review-research](https://github.com/tsterbak/product-review-research): An AI webapp build with PromptMage to provide in-depth analysis for products by researching trustworthy online reviews. 
 
 ## Getting Started
 
