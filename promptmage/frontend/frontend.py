@@ -32,31 +32,48 @@ class PromptMageFrontend:
             with theme.frame(
                 "Welcome to the PromptMage GUI",
                 flow_name=slugify(self.current_flow.name),
+                subtitle="Select a flow to get started",
             ):
                 build_overview_page(self.flows)
 
         @ui.page("/{flow_name}", title="PromptMage - Flow")
         def flow_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame("Playground", flow_name=flow_name):
+            with theme.frame(
+                "Playground",
+                flow_name=flow_name,
+                subtitle="Run, evaluate, and manage your flow",
+            ):
                 build_flow_page(self.flows_dict[flow_name])
 
         @ui.page("/runs/{flow_name}", title="PromptMage - Runs")
         def runs_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Runs Overview - {flow_name}", flow_name=flow_name):
+            with theme.frame(
+                f"Runs Overview - {flow_name}",
+                flow_name=flow_name,
+                subtitle="View and manage runs",
+            ):
                 create_runs_view(self.current_flow)()
 
         @ui.page("/prompts/{flow_name}", title="PromptMage - Prompts")
         def prompts_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Prompts Overview - {flow_name}", flow_name=flow_name):
+            with theme.frame(
+                f"Prompts Overview - {flow_name}",
+                flow_name=flow_name,
+                subtitle="View and manage prompts",
+            ):
                 create_prompts_view(self.current_flow)()
 
         @ui.page("/evaluation/{flow_name}", title="PromptMage - Evaluation")
         def evaluation_page(flow_name: str):
             self.current_flow = self.flows_dict[flow_name]
-            with theme.frame(f"Evaluation - {flow_name}", flow_name=flow_name):
+            with theme.frame(
+                f"Evaluation - {flow_name}",
+                flow_name=flow_name,
+                subtitle="Select a dataset to evaluate",
+            ):
                 build_evaluation_page(self.current_flow)
 
         @ui.page(
@@ -66,7 +83,9 @@ class PromptMageFrontend:
         def evaluation_dataset_page(flow_name: str, dataset_id: str):
             self.current_flow = self.flows_dict[flow_name]
             with theme.frame(
-                f"Evaluation - {flow_name} - {dataset_id}", flow_name=flow_name
+                f"Evaluation - {flow_name} - {dataset_id}",
+                flow_name=flow_name,
+                subtitle="Evaluate your results",
             ):
                 build_dataset_page(self.current_flow, dataset_id)()
 
