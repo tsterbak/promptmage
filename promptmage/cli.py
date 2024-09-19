@@ -11,6 +11,7 @@ from promptmage.utils import get_flows
 from promptmage.api import PromptMageAPI
 from promptmage.frontend import PromptMageFrontend
 from promptmage.storage import SQLiteDataBackend, SQLitePromptBackend
+from promptmage.storage.utils import backup_db_to_json, restore_db_from_json
 
 
 @click.group()
@@ -126,9 +127,51 @@ def serve(host: str, port: int):
     logger.info(f"Running PromptMage backend version {__version__}")
 
 
+@click.command()
+@click.option(
+    "--json_path",
+    type=click.Path(
+        exists=True,
+    ),
+    help="The path to write the JSON file containing the database backup.",
+    required=True,
+)
+def backup(json_path: str):
+    """Backup the database from the PromptMage instance to json."""
+    click.echo(f"Backing up the database to '{json_path}'...")
+    backup_db_to_json(db_path=".promptmage/promptmage.db", json_path=json_path)
+    click.echo("Backup complete.")
+
+
+@click.command()
+@click.option(
+    "--json_path",
+    type=click.Path(
+        exists=True,
+    ),
+    help="The path to the JSON file containing the database backup.",
+    required=True,
+)
+def restore(json_path: str):
+    """Restore the database from json to the PromptMage instance."""
+    click.echo(f"Restoring the database from the backup '{json_path}'...")
+    # check if the database already exists
+    if Path(".promptmage/promptmage.db").exists():
+        click.confirm(
+            "Are you sure you want to overwrite the current database?",
+            abort=True,
+        )
+    # restore the database
+    restore_db_from_json(db_path=".promptmage/promptmage.db", json_path=json_path)
+    click.echo("Database restored successfully.")
+
+
 promptmage.add_command(version)
 promptmage.add_command(run)
 promptmage.add_command(export)
+promptmage.add_command(serve)
+promptmage.add_command(backup)
+promptmage.add_command(restore)
 
 
 if __name__ == "__main__":
