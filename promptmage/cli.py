@@ -117,6 +117,15 @@ def export(runs: bool = False, prompts: bool = False, filename: str = "promptmag
         click.echo("Export complete.")
 
 
+@click.command()
+@click.option("--host", help="The host IP to run the server on.", default="0.0.0.0")
+@click.option("--port", help="The port to run the server on.", default=8021)
+def serve(host: str, port: int):
+    """Serve the PromptMage collaborative backend and frontend."""
+    logger.info(f"\nWelcome to\n{title}")
+    logger.info(f"Running PromptMage backend version {__version__}")
+
+
 promptmage.add_command(version)
 promptmage.add_command(run)
 promptmage.add_command(export)
