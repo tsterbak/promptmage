@@ -1,3 +1,4 @@
+import json
 import inspect
 from loguru import logger
 from collections import defaultdict, deque
@@ -292,6 +293,26 @@ class PromptMage:
         # Set the signature of the returned function to match the first function in the graph
         run_function.__signature__ = first_func_node.signature
         return run_function
+
+    async def websocket_handler(self, websocket):
+        """
+        Handle the websocket connection for the flow.
+        """
+        logger.info("Websocket connection established.")
+        run_function = self.get_run_function(active_prompts=True)
+        await websocket.accept()
+        while True:
+            data = await websocket.receive_text()
+            if data == "close":
+                break
+            logger.info(f"Received data: {data}")
+            # Parse the data
+            data = json.loads(data)
+            # Run the flow
+            result = run_function(**data)
+            # Send the result back
+            await websocket.send_text(json.dumps(result))
+        logger.info("Websocket connection closed.")
 
     def __repr__(self) -> str:
         return f"PromptMage(name={self.name}, steps={list(self.steps.keys())})"

@@ -129,6 +129,10 @@ class PromptMageAPI:
                 response_model=EndpointResponse,
                 tags=[flow.name],
             )
+            # add a websocket for the flow
+            app.add_websocket_route(
+                f"/api/{slugify(flow.name)}/ws", flow.websocket_handler
+            )
 
         return app
 
