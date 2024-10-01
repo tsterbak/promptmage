@@ -68,9 +68,11 @@ class RemotePromptBackend:
         Args:
             prompt_id (str): The id of the prompt to get.
         """
+        logger.info(f"Retrieving prompt with ID {prompt_id}")
         try:
-            response = requests.get(f"{self.url}/prompts/{prompt_id}")
+            response = requests.get(f"{self.url}/prompts/id/{prompt_id}")
             response.raise_for_status()
+            logger.info(f"{response.json()}")
             return Prompt(**response.json())
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to get prompt by id: {e}")

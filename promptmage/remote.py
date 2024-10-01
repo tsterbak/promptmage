@@ -52,20 +52,28 @@ class RemoteBackendAPI:
             return self.data_backend.get_all_data()
 
         # Endpoints for the prompt storage backend
+
         @app.post("/prompts", tags=["prompts"])
         async def store_prompt(prompt: dict):
+            logger.info(f"Storing prompt: {prompt}")
             self.prompt_backend.store_prompt(Prompt(**prompt))
 
         @app.put("/prompts", tags=["prompts"])
         async def update_prompt(prompt: dict):
+            logger.info(f"Updating prompt: {prompt}")
             self.prompt_backend.update_prompt(Prompt(**prompt))
 
         @app.get("/prompts/{prompt_name}", tags=["prompts"])
         async def get_prompt(
-            prompt_name: str,
-            version: int | None = None,
-            active: bool | None = None,
+            prompt_name: str = Path(
+                ..., description="The name of the prompt to retrieve"
+            ),
+            version: int | None = Query(None, description="The version of the prompt"),
+            active: bool | None = Query(
+                None, description="Whether the prompt is active"
+            ),
         ):
+            logger.info(f"Retrieving prompt with name: {prompt_name}")
             try:
                 return self.prompt_backend.get_prompt(prompt_name, version, active)
             except PromptNotFoundException as e:
@@ -84,14 +92,19 @@ class RemoteBackendAPI:
 
         @app.get("/prompts", tags=["prompts"])
         def get_prompts():
+            logger.info("Retrieving all prompts.")
             return self.prompt_backend.get_prompts()
 
-        @app.get("/prompts/{prompt_id}", tags=["prompts"])
-        async def get_prompt_by_id(prompt_id: str = Path(...)):
+        @app.get("/prompts/id/{prompt_id}", tags=["prompts"])
+        async def get_prompt_by_id(
+            prompt_id: str = Path(..., description="The ID of the prompt to retrieve")
+        ):
+            logger.info(f"Retrieving prompt with ID {prompt_id}")
             return self.prompt_backend.get_prompt_by_id(prompt_id)
 
         @app.delete("/prompts/{prompt_id}", tags=["prompts"])
         async def delete_prompt(prompt_id: str = Path(...)):
+            logger.info(f"Deleting prompt with ID: {prompt_id}")
             self.prompt_backend.delete_prompt(prompt_id)
 
         # Endpoints for the datasets
