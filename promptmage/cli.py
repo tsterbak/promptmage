@@ -9,6 +9,7 @@ from loguru import logger
 from promptmage import __version__, title
 from promptmage.utils import get_flows
 from promptmage.api import PromptMageAPI
+from promptmage.remote import RemoteBackendAPI
 from promptmage.frontend import PromptMageFrontend
 from promptmage.storage import SQLiteDataBackend, SQLitePromptBackend
 from promptmage.storage.utils import backup_db_to_json, restore_db_from_json
@@ -125,6 +126,20 @@ def serve(host: str, port: int):
     """Serve the PromptMage collaborative backend and frontend."""
     logger.info(f"\nWelcome to\n{title}")
     logger.info(f"Running PromptMage backend version {__version__}")
+    # create the .promptmage directory to store all the data
+    dirPath = Path(".promptmage")
+    dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+
+    # create the FastAPI app
+    backend = RemoteBackendAPI(
+        url=f"http://{host}:{port}",
+        data_backend=SQLiteDataBackend(),
+        prompt_backend=SQLitePromptBackend(),
+    )
+    app = backend.get_app()
+
+    # run the applications
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 
 @click.command()

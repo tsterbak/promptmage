@@ -13,10 +13,8 @@ from sqlalchemy import (
     select,
     delete,
     DateTime,
-    UUID,
     ForeignKey,
     Boolean,
-    text,
     and_,
     Float,
 )

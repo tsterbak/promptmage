@@ -1,14 +1,21 @@
 import json
 import inspect
 from loguru import logger
-from collections import defaultdict, deque
+from collections import defaultdict
 from typing import Dict, Callable, List
 
 
 # Local imports
 from .step import MageStep
 from .result import MageResult
-from .storage import PromptStore, DataStore, SQLitePromptBackend, SQLiteDataBackend
+from .storage import (
+    PromptStore,
+    DataStore,
+    SQLitePromptBackend,
+    SQLiteDataBackend,
+    RemotePromptBackend,
+    RemoteDataBackend,
+)
 
 
 class PromptMage:
@@ -19,6 +26,7 @@ class PromptMage:
         prompt_store (PromptStore): The prompt store to use for storing prompts.
         data_store (DataStore): The data store to use for storing data.
         steps (Dict): A dictionary of steps in the PromptMage instance.
+        remote_url (str): The URL of the remote server to use for prompts and data.
     """
 
     def __init__(
@@ -27,15 +35,35 @@ class PromptMage:
         prompt_store: PromptStore | None = None,
         data_store: DataStore | None = None,
         available_models: List[str] | None = None,
+        remote_url: str | None = None,
     ):
         self.name: str = name
-        self.prompt_store = (
-            prompt_store if prompt_store else PromptStore(backend=SQLitePromptBackend())
-        )
-        self.data_store = (
-            data_store if data_store else DataStore(backend=SQLiteDataBackend())
-        )
         self.available_models = available_models
+        self.remote_url: str = remote_url
+
+        # Initialize the prompt and data stores
+        if remote_url:
+            self.prompt_store = (
+                prompt_store
+                if prompt_store
+                else PromptStore(backend=RemotePromptBackend(remote_url))
+            )
+            self.data_store = (
+                data_store
+                if data_store
+                else DataStore(backend=RemoteDataBackend(remote_url))
+            )
+        else:
+            self.prompt_store = (
+                prompt_store
+                if prompt_store
+                else PromptStore(backend=SQLitePromptBackend())
+            )
+            self.data_store = (
+                data_store if data_store else DataStore(backend=SQLiteDataBackend())
+            )
+
+        # Initialize the steps
         self.steps: Dict[str, MageStep] = {}
         logger.info(f"Initialized PromptMage with name: {name}")
 
@@ -77,9 +105,8 @@ class PromptMage:
         One-to-many steps are steps that are expected to return Iterable outputs. Following steps will be executed for each output.
         Many-to-one steps are steps that are expected to receive Iterable inputs. The step will be executed on all inputs together.
         """
-        assert not (
-            one_to_many and many_to_one
-        ), "Cannot be both one-to-many and many-to-one."
+        if one_to_many and many_to_one:
+            raise ValueError("Cannot be both one-to-many and many-to-one.")
 
         def decorator(func):
             # get the function signature
