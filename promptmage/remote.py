@@ -1,14 +1,12 @@
 """This module contains the api for the remote backend of the PromptMage package."""
 
-from pydantic import BaseModel
-from slugify import slugify
+from loguru import logger
 
 from fastapi import FastAPI, Path, Query
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from promptmage import RunData, Prompt
+from promptmage.exceptions import PromptNotFoundException
 
 
 class RemoteBackendAPI:
@@ -40,7 +38,10 @@ class RemoteBackendAPI:
         # Endpoints for the data storage backend
         @app.post("/runs", tags=["runs"])
         async def store_run(run_data: dict):
-            self.data_backend.store_data(RunData(**run_data))
+            logger.info(f"Storing run data: {run_data}")
+            run_data = RunData(**run_data)
+            run_data.prompt = Prompt(**run_data.prompt)
+            self.data_backend.store_data(run_data)
 
         @app.get("/runs/{step_run_id}", tags=["runs"])
         async def get_run(step_run_id: str = Path(...)):
@@ -59,13 +60,27 @@ class RemoteBackendAPI:
         async def update_prompt(prompt: dict):
             self.prompt_backend.update_prompt(Prompt(**prompt))
 
-        @app.get("/prompts", tags=["prompts"])
+        @app.get("/prompts/{prompt_name}", tags=["prompts"])
         async def get_prompt(
-            prompt_name: str = Query(None),
-            version: int = Query(None),
-            active: bool = Query(None),
+            prompt_name: str,
+            version: int | None = None,
+            active: bool | None = None,
         ):
-            return self.prompt_backend.get_prompt(prompt_name, version, active)
+            try:
+                return self.prompt_backend.get_prompt(prompt_name, version, active)
+            except PromptNotFoundException as e:
+                logger.error(
+                    f"Prompt with ID {prompt_name} not found, returning an empty prompt."
+                )
+                # return an empty prompt if the prompt is not found
+                return Prompt(
+                    name=prompt_name,
+                    version=1,
+                    system="You are a helpful assistant.",
+                    user="",
+                    template_vars=[],
+                    active=False,
+                )
 
         @app.get("/prompts", tags=["prompts"])
         def get_prompts():
@@ -78,5 +93,15 @@ class RemoteBackendAPI:
         @app.delete("/prompts/{prompt_id}", tags=["prompts"])
         async def delete_prompt(prompt_id: str = Path(...)):
             self.prompt_backend.delete_prompt(prompt_id)
+
+        # Endpoints for the datasets
+
+        @app.get("/datasets/{dataset_id}", tags=["datasets"])
+        async def get_dataset(dataset_id: str):
+            return self.data_backend.get_dataset(dataset_id)
+
+        @app.get("/datasets", tags=["datasets"])
+        async def get_datasets():
+            return self.data_backend.get_datasets()
 
         return app

@@ -14,7 +14,7 @@ class RemotePromptBackend:
         """Store a prompt in the database."""
         # Send the prompt to the remote server
         try:
-            response = requests.post(f"{self.url}/prompts", json=prompt.dict())
+            response = requests.post(f"{self.url}/prompts", json=prompt.to_dict())
             response.raise_for_status()
             logger.info(f"Stored prompt {prompt}")
         except requests.exceptions.RequestException as e:
@@ -28,9 +28,7 @@ class RemotePromptBackend:
             prompt (Prompt): The prompt to update.
         """
         try:
-            response = requests.put(
-                f"{self.url}/prompts/{prompt.id}", json=prompt.dict()
-            )
+            response = requests.put(f"{self.url}/prompts", json=prompt.to_dict())
             response.raise_for_status()
             logger.info(f"Updated prompt {prompt}")
         except requests.exceptions.RequestException as e:
@@ -50,15 +48,14 @@ class RemotePromptBackend:
         Returns:
             Prompt: The retrieved prompt.
         """
+        logger.info(f"Retrieving prompt with name: {prompt_name}")
         try:
-            response = requests.get(
-                f"{self.url}/prompts",
-                params={
-                    "prompt_name": prompt_name,
-                    "version": version,
-                    "active": active,
-                },
-            )
+            path = f"{self.url}/prompts/{prompt_name}"
+            if version:
+                path += f"?version={version}"
+            if active:
+                path += f"&active={active}"
+            response = requests.get(path)
             response.raise_for_status()
             return Prompt(**response.json())
         except requests.exceptions.RequestException as e:
