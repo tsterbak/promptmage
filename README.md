@@ -40,6 +40,10 @@ Take the [walkthrough](https://promptmage.io/walkthrough/) to see what you can d
 - build-in, automatically created API with fastAPI for easy integration and deployment
 - Type-hint everything for automatic inference and validation magic
 
+## Projects using PromptMage
+
+- [product-review-research](https://github.com/tsterbak/product-review-research): An AI webapp build with PromptMage to provide in-depth analysis for products by researching trustworthy online reviews. 
+
 ## Getting Started
 
 ### Installation

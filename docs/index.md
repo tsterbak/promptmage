@@ -99,6 +99,10 @@ Take the [walkthrough](walkthrough.md) to see what you can do with PromptMage.
 - build-in, automatically created API with fastAPI for easy integration and deployment
 - Type-hint everything for automatic inference and validation magic
 
+## Projects using PromptMage
+
+- [product-review-research](https://github.com/tsterbak/product-review-research): An AI webapp build with PromptMage to provide in-depth analysis for products by researching trustworthy online reviews. 
+
 ## Development
 
 To develop PromptMage, check out the [DEVELOPMENT.md](https://github.com/tsterbak/promptmage/blob/main/DEVELOPMENT.md) file.
