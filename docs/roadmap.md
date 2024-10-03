@@ -10,19 +10,19 @@
 
 ### September
 
-- [ ] Implement a remote backend for PromptMage
-- [ ] Improve error handling and reporting
-- [ ] More complex use-case examples
+- [x] Implement a remote backend for PromptMage
+- [x] Improve error handling and reporting
 
 ### October
+- [ ] More complex use-case examples
 - [ ] Implement a robust task queue for LLM calls
 
 ### November
 
-- [ ] 
+- [ ] Implement automatic evaluation with llm-as-a-judge
 
 ### December
 
-- [ ] 
+- [ ] more to come!
 
 ## 2025

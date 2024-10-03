@@ -69,6 +69,29 @@ promptmage run flow.py
 
 This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000/gui/`.
 
+## Usage with a remote backend server
+
+For a production setup and collaborative usage with teams you can run the promptmage server with a remote backend. To run the remote backend on a remote server, run the following command:
+
+```bash
+promptmage serve --port 8021
+```
+
+To connect your promptmage script to the remote backend, you need to add the `remote` url to the PromptMage instance of your script:
+
+```python
+mage = PromptMage(
+  name="example",
+  remote="http://localhost:8021" #(1)!
+)
+```
+
+Now you can run your script and the promptmage server will use the remote backend to run the flow and store the results.
+
+1. The `remote` parameter is used to specify the URL of the remote backend to use. If this is set, the `PromptMage` instance will use the remote backend instead of the local one.
+
+
+
 ## GUI walkthrough
 
 The promptmage interface is divided into four main sections: the flow playground, the run history, the prompt repository, and the evaluation section.

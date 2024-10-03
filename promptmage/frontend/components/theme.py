@@ -7,7 +7,7 @@ from .menu import menu
 
 
 @contextmanager
-def frame(navigation_title: str, flow_name: str = None):
+def frame(navigation_title: str, flow_name: str = None, subtitle: str = None):
     """Custom page frame to share the same styling and behavior across all pages"""
     dark_mode_icon = None
     # load dark mode from local storage
@@ -45,7 +45,13 @@ def frame(navigation_title: str, flow_name: str = None):
             "flat color=white"
         ).classes("p-0"):
             ui.avatar("img:/static/promptmage-logo.png", square=True)
-        ui.label(navigation_title).classes("text-2xl self-center")
+
+        if subtitle:
+            with ui.column().classes("gap-0"):
+                ui.label(navigation_title).classes("text-2xl")
+                ui.label(subtitle).classes("text-sm text-gray-400")
+        else:
+            ui.label(navigation_title).classes("text-2xl self-center")
         ui.space()
         menu(flow_name=flow_name)
         with ui.button(

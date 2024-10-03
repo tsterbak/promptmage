@@ -155,7 +155,10 @@ class MageStep:
 
     def set_prompt(self, prompt: Prompt):
         prompt.active = False
-        self.prompt_store.update_prompt(prompt)
+        try:
+            self.prompt_store.update_prompt(prompt)
+        except Exception as e:
+            self.prompt_store.store_prompt(prompt)
 
     def store_run(
         self,

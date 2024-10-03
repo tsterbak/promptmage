@@ -62,7 +62,21 @@ To use promptmage, run the following command:
 promptmage run <path-to-flow>
 ```
 
-This will start the promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000/gui/`.
+This will start the local promptmage server and run the flow at the given path. You can now access the promptmage interface at `http://localhost:8000/gui/`.
+
+To run the remote backend server, run the following command:
+
+```bash
+promptmage serve --port 8021
+```
+
+To make it work with your promptmage script, you should add the following lines to your script:
+
+```python
+from promptmage import PromptMage
+
+mage = PromptMage(remote="http://localhost:8021")  # or the URL of your remote server
+```
 
 Have a look at the examples in the [examples](https://github.com/tsterbak/promptmage/tree/main/examples) folder to see how to use promptmage in your application or workflow.
 
