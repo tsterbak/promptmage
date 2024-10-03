@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install promptmage
-RUN pip install promptmage==0.1.2
+RUN pip install promptmage==0.1.3
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
