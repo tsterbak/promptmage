@@ -7,7 +7,6 @@ This page contains the API reference with the most important classes and methods
 
 The `promptmage` CLI is the command line interface to run the promptmage server and interact with the promptmage backend.
 
-
 ### version
 Show the installed promptmage version.
 
@@ -75,7 +74,6 @@ Available options:
 ### restore
 Restore the promptmage database from a json file.
 
-
 !!! warning
 
     This will ask for confirmation before restoring and will overwrite the current database.
@@ -88,10 +86,6 @@ promptmage restore --json_path <json_path>
 Available options:
 - **`--json_path`** (`str`):  
   The path to the json file to restore the database from.
-
-
-
-
 
 
 ## PromptMage `class`
