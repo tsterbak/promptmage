@@ -34,7 +34,7 @@ def version():
         exists=True,
     ),
 )
-@click.option("--host", default="0.0.0.0", help="The host IP to run the server on.")
+@click.option("--host", default="localhost", help="The host IP to run the server on.")
 @click.option("--port", default=8000, type=int, help="The port to run the server on.")
 @click.option(
     "--browser",
@@ -120,7 +120,7 @@ def export(runs: bool = False, prompts: bool = False, filename: str = "promptmag
 
 
 @click.command()
-@click.option("--host", help="The host IP to run the server on.", default="0.0.0.0")
+@click.option("--host", help="The host IP to run the server on.", default="localhost")
 @click.option("--port", help="The port to run the server on.", default=8021)
 def serve(host: str, port: int):
     """Serve the PromptMage collaborative backend and frontend."""

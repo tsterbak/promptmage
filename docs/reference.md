@@ -2,6 +2,98 @@
 
 This page contains the API reference with the most important classes and methods of promptmage.
 
+
+## PromptMage CLI
+
+The `promptmage` CLI is the command line interface to run the promptmage server and interact with the promptmage backend.
+
+
+### version
+Show the installed promptmage version.
+
+Usage:
+```bash
+promptmage version
+```
+
+### run
+Run a flow with the given path. A flow is a python script that defines the flow of the promptmage application.
+
+Usage:
+```bash
+promptmage run <path-to-flow>
+```
+
+Available options:
+- **`--port`** (`int`):  
+  The port to run the server on. Default is `8000`.
+- **`--host`** (`str`):
+  The host to run the server on. Default is `localhost`.
+
+### serve
+Start the promptmage backend server.
+
+Usage:
+```bash
+promptmage serve
+```
+
+Available options:
+- **`--port`** (`int`):  
+  The port to run the server on. Default is `8021`.
+- **`--host`** (`str`):  
+  The host to run the server on. Default is `localhost`.
+  
+### export
+Export the promptmage database to json.
+
+Usage:
+```bash
+promptmage export --filename <filename>
+```
+
+Available options:
+- **`--filename`** (`str`):  
+  The filename to export the database to.
+- **`--runs`** (`bool`):  
+  Whether to export the runs as well. Default is `False`.
+- **`--prompts`** (`bool`):  
+  Whether to export the prompts as well. Default is `False`.
+
+### backup
+Backup the promptmage database to a json file.
+
+Usage:
+```bash
+promptmage backup --json_path <json_path>
+```
+
+Available options:
+- **`--json_path`** (`str`):  
+  The path to the json file to backup the database to.
+
+### restore
+Restore the promptmage database from a json file.
+
+
+!!! warning
+
+    This will ask for confirmation before restoring and will overwrite the current database.
+
+Usage:
+```bash
+promptmage restore --json_path <json_path>
+```
+
+Available options:
+- **`--json_path`** (`str`):  
+  The path to the json file to restore the database from.
+
+
+
+
+
+
 ## PromptMage `class`
 
 The `PromptMage` class is the main class of promptmage. It is used store all the information about the flow and to run the flow.
@@ -10,6 +102,9 @@ The `PromptMage` class is the main class of promptmage. It is used store all the
 
 - **name** (`str`):  
   The name of the `PromptMage` instance.
+
+- **remote** (`str`):  
+  The URL of the remote backend to use. If this is set, the `PromptMage` instance will use the remote backend instead of the local one.
 
 - **available_models** (`List[str]`):  
   A list of available models to use for the flow.
