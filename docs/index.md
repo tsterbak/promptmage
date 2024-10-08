@@ -109,13 +109,20 @@ To develop PromptMage, check out the [DEVELOPMENT.md](https://github.com/tsterba
 
 ## Contributing
 
-Contributing
+We welcome contributions from the community!
 
-We welcome contributions from the community! If you're interested in improving PromptMage, you can contribute in the following ways:
-
+If you're interested in improving PromptMage, you can contribute in the following ways:
 * **Reporting Bugs**: Submit an issue in our repository, providing a detailed description of the problem and steps to reproduce it.
+* **Improve documentation**: If you find any errors or have suggestions for improving the documentation, please submit an issue or a pull request.
+* **Fixing Bugs**: Check out our list of open issues and submit a pull request to fix any bugs you find.
 * **Feature Requests**: Have ideas on how to make PromptMage better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
 * **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
+
+To ensure a smooth contribution process, please follow these guidelines:
+* **create an issue before submitting a pull request** to discuss the changes you'd like to make. This helps us ensure that your contribution aligns with the project's goals and prevents duplicate work.
+* **follow the coding standards** of the project. Check the [DEVELOPMENT.md](https://github.com/tsterbak/promptmage/blob/main/DEVELOPMENT.md) file for more information.
+
+Make sure to check if your issue or PR has already been fixed or implemented before opening a new one!
 
 
 ## Contact
