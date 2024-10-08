@@ -17,7 +17,7 @@ extra:
     <div class="hero-content">
         <h1>Welcome to PromptMage</h1>
         <p>
-        PromptMage is designed to offer an intuitive interface that simplifies the process of creating and managing complex LLM workflows.
+        PromptMage is a python framework to simplify the development of complex, multi-step applications based on LLMs.
         </p>
         <a href="getting-started" class="button">Get Started</a>
         <a href="tutorial" class="button secondary">Learn More</a>
