@@ -1,0 +1,4 @@
+/* Hide the title of the page */
+.hide-title article h1 {
+    display: none !important;
+}
