@@ -24,9 +24,9 @@
 
 ## About the Project
 
-"PromptMage" is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution. It facilitates prompt testing and comparison, and it incorporates version control features to help users track the development of their prompts. Suitable for both small teams and large enterprises, "PromptMage" seeks to improve productivity and foster the practical use of LLM technology.
+PromptMage is a python framework to simplify the development of complex, multi-step applications based on LLMs. It is designed to offer an intuitive interface that simplifies the process of creating and managing LLM workflows as a self-hosted solution. PromptMage facilitates prompt testing and comparison, and incorporates version control features to help users track the development of their prompts. Suitable for both small teams and large enterprises, PromptMage seeks to improve productivity and foster the practical use of LLM technology.
 
-The approach with "PromptMage" is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
+The approach with PromptMage is to provide a pragmatic solution that bridges the current gap in LLM workflow management. We aim to empower developers, researchers, and organizations by making LLM technology more accessible and manageable, thereby supporting the next wave of AI innovations.
 
 ![PromptMage](https://github.com/tsterbak/promptmage/blob/main/docs/images/screenshots/plaground-dark.png)
 
@@ -92,14 +92,20 @@ To develop PromptMage, check out the [DEVELOPMENT.md](DEVELOPMENT.md) file.
 
 ## Contributing
 
-Contributing
+We welcome contributions from the community!
 
-We welcome contributions from the community! If you're interested in improving PromptMage, you can contribute in the following ways:
-
+If you're interested in improving PromptMage, you can contribute in the following ways:
 * **Reporting Bugs**: Submit an issue in our repository, providing a detailed description of the problem and steps to reproduce it.
+* **Improve documentation**: If you find any errors or have suggestions for improving the documentation, please submit an issue or a pull request.
+* **Fixing Bugs**: Check out our list of open issues and submit a pull request to fix any bugs you find.
 * **Feature Requests**: Have ideas on how to make PromptMage better? We'd love to hear from you! Please submit an issue, detailing your suggestions.
 * **Pull Requests**: Contributions via pull requests are highly appreciated. Please ensure your code adheres to the coding standards of the project, and submit a pull request with a clear description of your changes.
 
+To ensure a smooth contribution process, please follow these guidelines:
+* **create an issue before submitting a pull request** to discuss the changes you'd like to make. This helps us ensure that your contribution aligns with the project's goals and prevents duplicate work.
+* **follow the coding standards** of the project. Check the [DEVELOPMENT.md](DEVELOPMENT.md) file for more information.
+
+Make sure to check if your issue or PR has already been fixed or implemented before opening a new one!
 
 ## License
 
