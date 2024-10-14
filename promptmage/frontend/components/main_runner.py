@@ -44,7 +44,7 @@ def create_main_runner(mage: PromptMage, execution_graph):
                         )
 
             with ui.row().classes("w-full justify-end"):
-                ui.button("Run", on_click=run_function)
+                ui.button("Run", on_click=run_function, icon="o_play_circle_filled")
             ui.separator()
             # steps runner
             ui.label("Steps:").classes("font-bold text-lg")
@@ -55,6 +55,7 @@ def create_main_runner(mage: PromptMage, execution_graph):
                 ui.label("Result:").classes("font-bold text-lg")
                 ui.button(
                     "Copy to clipboard",
+                    icon="o_content_copy",
                     on_click=lambda: ui.clipboard.write(result_field.content),
                 )  # .props("fab")
             result_field = (

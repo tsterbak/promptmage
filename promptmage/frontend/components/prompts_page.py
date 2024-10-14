@@ -59,16 +59,19 @@ def create_prompts_view(mage: PromptMage):
                     with ui.row():
                         activate_button = ui.button(
                             "Activate Prompt",
+                            icon="o_play_circle_filled",
                             on_click=lambda prompt_id=prompt.id: activate_prompt(
                                 prompt_id
                             ),
                         )
                         ui.button(
                             "Edit Prompt",
+                            icon="o_edit",
                             on_click=lambda prompt_id=prompt.id: edit_prompt(prompt_id),
                         )
                         delete_button = ui.button(
                             "Delete Prompt",
+                            icon="o_delete",
                             on_click=lambda prompt_id=prompt.id: delete_prompt(
                                 prompt_id
                             ),

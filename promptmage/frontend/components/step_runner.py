@@ -190,13 +190,14 @@ def create_function_runner(step: MageStep):
                     input_output_section.ui()
 
                 with ui.row().classes("w-full justify-end"):
-                    ui.button("Run", on_click=run_function)
-                    ui.button("Save prompt", on_click=set_prompt)
+                    ui.button("Run", on_click=run_function, icon="o_play_circle_filled")
+                    ui.button("Save prompt", on_click=set_prompt, icon="o_save")
                 ui.separator()
                 with ui.row().classes("w-full justify-between"):
                     ui.label("Result:").classes("font-bold")
                     ui.button(
                         "Copy to clipboard",
+                        icon="o_content_copy",
                         on_click=lambda: ui.clipboard.write(
                             step.result or "No result available"
                         ),
