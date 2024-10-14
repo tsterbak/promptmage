@@ -69,6 +69,7 @@ def create_function_runner(step: MageStep):
             del app.storage.user["step_run_id"]
 
     async def run_function():
+        nonlocal prompt
         expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
         inputs = {
@@ -77,6 +78,7 @@ def create_function_runner(step: MageStep):
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
+            step.set_prompt(prompt)
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
@@ -190,8 +192,10 @@ def create_function_runner(step: MageStep):
                     input_output_section.ui()
 
                 with ui.row().classes("w-full justify-end"):
-                    ui.button("Run", on_click=run_function, icon="o_play_circle_filled")
-                    ui.button("Save prompt", on_click=set_prompt, icon="o_save")
+                    ui.button(
+                        "Save & Run", on_click=run_function, icon="o_play_circle_filled"
+                    )
+                    ui.button("Save", on_click=set_prompt, icon="o_save")
                 ui.separator()
                 with ui.row().classes("w-full justify-between"):
                     ui.label("Result:").classes("font-bold")
