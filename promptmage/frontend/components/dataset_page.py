@@ -7,6 +7,8 @@ from promptmage import PromptMage
 from promptmage.run_data import RunData
 from .styles import label_with_icon
 
+RATING_LABEL_LOOKUP = {1: "positive", -1: "negative", None: "Not rated"}
+
 
 # Function to build the rows for the table
 def build_table_rows(runs, datapoints):
@@ -14,7 +16,7 @@ def build_table_rows(runs, datapoints):
         {
             "step_run_id": run_data.step_run_id,
             "name": run_data.step_name,
-            "rated": datapoint.rating if datapoint.rating else "Not rated",
+            "rated": RATING_LABEL_LOOKUP.get(datapoint.rating, "Invalid rating"),
         }
         for run_data, datapoint in zip(runs, datapoints)
     ]
@@ -123,7 +125,7 @@ def build_dataset_page(flow: PromptMage, dataset_id: str):
                         ui.label(f"{run_data.run_id}")
                         ui.label()
                         ui.chip(
-                            f"{datapoint.rating if datapoint.rating else 'Not rated'}",
+                            f"{RATING_LABEL_LOOKUP.get(datapoint.rating, 'Not rated')}",
                             icon="",
                             color=f"{'grey' if not datapoint.rating else ('red' if datapoint.rating == -1 else 'green')}",
                         ).props("outline square")
@@ -262,7 +264,7 @@ def build_dataset_page(flow: PromptMage, dataset_id: str):
                     "body-cell-rated",
                     """
                     <q-td key="rated" :props="props">
-                        <q-badge :color="props.value === 'Not rated' ? 'grey' : (props.value === -1 ? 'red' : 'green')">
+                        <q-badge :color="props.value === 'Not rated' ? 'grey' : (props.value === 'negative' ? 'red' : 'green')">
                             {{ props.value }}
                         </q-badge>
                     </q-td>
