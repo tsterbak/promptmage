@@ -7,22 +7,33 @@ from promptmage import PromptMage
 
 
 def dataset_card(dataset, flow):
+    is_done = all(
+        [
+            dp.rating is not None
+            for dp in flow.data_store.backend.get_datapoints(dataset.id)
+        ]
+    )
     with ui.card().style("padding: 20px; margin: 10px;"):
+        if is_done:
+            ui.icon("check_circle").style("color: green; font-size: 24px;")
         ui.label(f"{dataset.name}").classes("text-lg")
-        ui.button(
-            "Go to dataset",
-            on_click=lambda: ui.navigate.to(
-                f"/evaluation/{slugify(flow.name)}/{dataset.id}"
-            ),
-        )
         ui.separator()
         datapoints = flow.data_store.backend.get_datapoints(dataset.id)
         ui.chip(f"{len(datapoints)} Datapoints", icon="check_circle").props("square")
         ui.separator()
-        ui.button(
-            "Delete",
-            on_click=lambda: delete_dataset(dataset.id, flow),
-        ).style("color: red;")
+        with ui.row().classes("justify-between"):
+            ui.button(
+                "Delete",
+                icon="o_delete",
+                on_click=lambda: delete_dataset(dataset.id, flow),
+            ).style("color: red;").props("outline")
+            ui.button(
+                "Go to dataset",
+                icon="o_arrow_forward",
+                on_click=lambda: ui.navigate.to(
+                    f"/evaluation/{slugify(flow.name)}/{dataset.id}"
+                ),
+            )
 
 
 def create_dataset(name: str, flow: PromptMage):
