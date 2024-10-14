@@ -8,34 +8,54 @@ from promptmage.prompt import Prompt
 from .styles import label_with_icon
 
 
-def create_prompts_view(mage: PromptMage):
-    side_panel = (
-        ui.element("div")
-        .style(
-            "position: fixed; top: 0; right: 0; width: 50%; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto;"
-        )
-        .classes("bg-gray-100 dark:bg-slate-800")
+# Define a simple function to add custom styles for active tabs
+def add_custom_css():
+    ui.add_head_html(
+        """
+    <style>
+        /* Subtle style for active tab */
+        .q-tab--active {
+            background-color: #e0f2ff !important; /* Light, soft blue background */
+            color: #333 !important; /* Darker text for contrast */
+            box-shadow: none !important; /* Remove any box shadow */
+            transition: background-color 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        /* Change text color of q-chip in the active tab to primary */
+        .q-tab--active .q-chip {
+            color: var(--q-primary) !important; /* Applies the text-primary color */
+        }
+
+        /* Ensure q-chip text in inactive tabs remains secondary */
+        .q-tab:not(.q-tab--active) .q-chip {
+            color: var(--q-secondary) !important; /* Applies the text-secondary color */
+        }
+
+        /* Optional: Hover effect for the tab */
+        .q-tab:hover {
+            background-color: #f0f4f8 !important; /* Soft hover effect */
+            color: #333 !important; /* Darker text for contrast */
+        }
+    </style>
+    """
     )
 
+
+def create_prompts_view(mage: PromptMage):
     # prompt editing dialog
     dialog = ui.dialog().props("full-width")
+    # Add the custom styles to the head of the document
+    add_custom_css()
 
-    # Function to show the side panel with detailed information
-    def show_side_panel(prompts: List[Prompt]):
-        # get prompt with highest version
-        side_panel.clear()
-        with side_panel:
-            ui.button(">>", on_click=hide_side_panel).style(
-                "margin: 20px; margin-bottom: 0px; margin-top: 100px;"
-            )
+    def create_prompt_content(prompts: List[Prompt]):
+        content = ui.column().classes("w-full h-[88vh] p-10")
+        with content:
             for prompt in sorted(prompts, key=lambda p: p.version, reverse=True):
                 bg_color = ""
                 # highlight active prompt in green
                 if prompt.active:
                     bg_color = "bg-green-200 dark:bg-green-800"
-                with ui.card().style(
-                    "padding: 20px; margin-right: 20px; margin-top: 10px; margin-bottom: 10px; margin-left: 20px;"
-                ).classes(bg_color):
+                with ui.card().classes(bg_color).classes("p-5 w-full"):
                     # display run data
                     with ui.grid(columns=2).classes("gap-0"):
                         label_with_icon("Prompt ID:", icon="o_info")
@@ -79,15 +99,14 @@ def create_prompts_view(mage: PromptMage):
                         if prompt.active:
                             activate_button.disable()
                             delete_button.disable()
-
-        side_panel.style("transform:translateX(0%);")
-        side_panel.update()
+                        if not prompt.active:
+                            delete_button.props("outline")
+        return content
 
     def delete_prompt(prompt_id):
         logger.info(f"Deleting prompt with ID: {prompt_id}.")
         mage.prompt_store.delete_prompt(prompt_id)
         ui.notify(f"Prompt {prompt_id} deleted.")
-        side_panel.update()
 
     def edit_prompt(prompt_id):
         logger.info(f"Editing prompt with ID: {prompt_id}.")
@@ -129,7 +148,6 @@ def create_prompts_view(mage: PromptMage):
                 p.active = False
                 mage.prompt_store.update_prompt(p)
         ui.notify(f"Prompt {prompt_id} activated.")
-        side_panel.update()
 
     def save_prompt(prompt_id: str, system: str, user: str):
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
@@ -144,12 +162,6 @@ def create_prompts_view(mage: PromptMage):
         mage.prompt_store.update_prompt(prompt)
         dialog.close()
 
-    # Function to hide the side panel
-    def hide_side_panel():
-        side_panel.clear()
-        side_panel.style("transform:translateX(100%);")
-        side_panel.update()
-
     def build_ui():
         all_prompts = mage.prompt_store.get_prompts()
         # group them by name
@@ -159,32 +171,21 @@ def create_prompts_view(mage: PromptMage):
                 prompts[prompt.name].append(prompt)
 
         # Main UI setup
-        with ui.card().style("padding: 20px"):
-            # Create a table with clickable rows
-            columns = [
-                {"name": "name", "label": "name", "field": "name", "sortable": True},
-                {
-                    "name": "versions",
-                    "label": "Number of versions",
-                    "field": "versions",
-                    "sortable": True,
-                },
-            ]
-
-            rows = [
-                {
-                    "name": name,
-                    "versions": len(prompts_for_name),
-                }
-                for name, prompts_for_name in prompts.items()
-            ]
-
-            table = ui.table(columns=columns, rows=rows)
-
-            def on_row_click(event):
-                selected_run_index = event.args[-2]["name"]
-                show_side_panel(prompts=prompts[selected_run_index])
-
-            table.on("rowClick", on_row_click)
+        content = {name: prompts_for_name for name, prompts_for_name in prompts.items()}
+        with ui.splitter(value=10).classes("w-full h-full") as splitter:
+            with splitter.before:
+                with ui.tabs().props("vertical").classes("w-full h-full") as tabs:
+                    for title in content:
+                        with ui.tab(title, label=title):
+                            ui.chip(
+                                f"{len(content[title])} versions", color="secondary"
+                            ).props("outline square")
+            with splitter.after:
+                with ui.tab_panels(tabs, value=list(content.keys())[0]).props(
+                    "vertical"
+                ).classes("w-full h-full"):
+                    for title, prompts_for_name in content.items():
+                        with ui.tab_panel(title).classes("w-full h-full"):
+                            create_prompt_content(prompts_for_name)
 
     return build_ui
