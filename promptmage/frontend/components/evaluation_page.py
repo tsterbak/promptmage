@@ -7,19 +7,29 @@ from promptmage import PromptMage
 
 
 def dataset_card(dataset, flow):
-    is_done = all(
-        [
-            dp.rating is not None
-            for dp in flow.data_store.backend.get_datapoints(dataset.id)
-        ]
-    )
+    datapoints = flow.data_store.backend.get_datapoints(dataset.id)
+    is_done = all([dp.rating is not None for dp in datapoints])
     with ui.card().style("padding: 20px; margin: 10px;"):
-        if is_done:
-            ui.icon("check_circle").style("color: green; font-size: 24px;")
-        ui.label(f"{dataset.name}").classes("text-lg")
+        with ui.row().classes("items-center"):
+            if is_done:
+                ui.icon("check_circle").style("color: green; font-size: 24px;")
+            else:
+                ui.icon("o_pending").style("color: orange; font-size: 24px;")
+            ui.label(f"{dataset.name}").classes("text-lg")
         ui.separator()
-        datapoints = flow.data_store.backend.get_datapoints(dataset.id)
-        ui.chip(f"{len(datapoints)} Datapoints", icon="check_circle").props("square")
+        with ui.row().classes("justify-between"):
+            with ui.column():
+                ui.label("Datapoints")
+                ui.label("Progress")
+                ui.label("Average rating")
+            with ui.column():
+                ui.label(f"{len(datapoints)}")
+                ui.label(
+                    f"{len([dp for dp in datapoints if dp.rating is not None]) / len(datapoints) * 100:.1f}%"
+                )
+                ui.label(
+                    f"{sum([dp.rating for dp in datapoints if dp.rating is not None]) / len(datapoints):.2f}"
+                )
         ui.separator()
         with ui.row().classes("justify-between"):
             ui.button(
