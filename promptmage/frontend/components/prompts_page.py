@@ -57,7 +57,7 @@ def create_prompts_view(mage: PromptMage):
                         ui.label(f"{prompt.user}")
 
                     with ui.row():
-                        ui.button(
+                        activate_button = ui.button(
                             "Activate Prompt",
                             on_click=lambda prompt_id=prompt.id: activate_prompt(
                                 prompt_id
@@ -67,12 +67,16 @@ def create_prompts_view(mage: PromptMage):
                             "Edit Prompt",
                             on_click=lambda prompt_id=prompt.id: edit_prompt(prompt_id),
                         )
-                        ui.button(
+                        delete_button = ui.button(
                             "Delete Prompt",
                             on_click=lambda prompt_id=prompt.id: delete_prompt(
                                 prompt_id
                             ),
                         )
+                        if prompt.active:
+                            activate_button.disable()
+                            delete_button.disable()
+
         side_panel.style("transform:translateX(0%);")
         side_panel.update()
 
@@ -127,11 +131,11 @@ def create_prompts_view(mage: PromptMage):
     def save_prompt(prompt_id: str, system: str, user: str):
         prompt = mage.prompt_store.get_prompt_by_id(prompt_id)
 
-        if (prompt.system != system) or ( prompt.user != user ):
+        if (prompt.system != system) or (prompt.user != user):
             ui.notify("Prompt saved.")
         else:
             ui.notify("Prompt unchanged. Not saved.")
-            
+
         prompt.system = system
         prompt.user = user
         mage.prompt_store.update_prompt(prompt)
