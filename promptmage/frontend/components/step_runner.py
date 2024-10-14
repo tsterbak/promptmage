@@ -69,7 +69,6 @@ def create_function_runner(step: MageStep):
             del app.storage.user["step_run_id"]
 
     async def run_function():
-        nonlocal prompt
         expansion_tab.props(f"icon={RUNNING_ICON}")
         expansion_tab.update()
         inputs = {
@@ -78,7 +77,7 @@ def create_function_runner(step: MageStep):
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
-            step.set_prompt(prompt)
+            set_prompt()
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
