@@ -77,6 +77,7 @@ def create_function_runner(step: MageStep):
         if prompt is not None:
             prompt.system = system_prompt_field.value
             prompt.user = user_prompt_field.value
+            set_prompt()
         if model_select:
             logger.info(f"Selected model: {model_select.value}")
             step.model = model_select.value
@@ -190,13 +191,16 @@ def create_function_runner(step: MageStep):
                     input_output_section.ui()
 
                 with ui.row().classes("w-full justify-end"):
-                    ui.button("Run", on_click=run_function)
-                    ui.button("Save prompt", on_click=set_prompt)
+                    ui.button(
+                        "Save & Run", on_click=run_function, icon="o_play_circle_filled"
+                    )
+                    ui.button("Save", on_click=set_prompt, icon="o_save")
                 ui.separator()
                 with ui.row().classes("w-full justify-between"):
                     ui.label("Result:").classes("font-bold")
                     ui.button(
                         "Copy to clipboard",
+                        icon="o_content_copy",
                         on_click=lambda: ui.clipboard.write(
                             step.result or "No result available"
                         ),

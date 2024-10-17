@@ -296,6 +296,7 @@ class EvaluationDatasetModel(Base):
     __tablename__ = "evaluation_datasets"
     id = Column("id", String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
     datapoints = relationship(
@@ -309,16 +310,18 @@ class EvaluationDatasetModel(Base):
         return cls(
             id=data["id"],
             name=data["name"],
+            description=data.get("description"),
         )
 
     def to_dict(self) -> Dict:
         return {
             "id": self.id,
             "name": self.name,
+            "description": self.description,
         }
 
     def __repr__(self):
-        return f"EvaluationDatasetModel(id={self.id}, name={self.name})"
+        return f"EvaluationDatasetModel(id={self.id}, name={self.name}, description={self.description})"
 
 
 class EvaluationDatapointModel(Base):
@@ -394,10 +397,10 @@ class SQLiteDataBackend(StorageBackend):
         finally:
             session.close()
 
-    def create_dataset(self, name: str):
+    def create_dataset(self, name: str, description: str = None):
         session = self.Session()
         try:
-            dataset = EvaluationDatasetModel(name=name)
+            dataset = EvaluationDatasetModel(name=name, description=description)
             session.add(dataset)
             session.commit()
         except SQLAlchemyError as e:

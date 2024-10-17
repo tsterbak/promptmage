@@ -18,4 +18,4 @@ title = """
                 ╚╝                 ╚══╝    
 """
 
-__all__ = ["PromptMage", "Prompt", "RunData"]
+__all__ = ["PromptMage", "Prompt", "RunData", "MageResult", "__version__", "title"]
