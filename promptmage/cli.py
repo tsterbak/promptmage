@@ -34,7 +34,7 @@ def version():
         exists=True,
     ),
 )
-@click.option("--host", default="localhost", help="The host IP to run the server on.")
+@click.option("--host", default="127.0.0.1", help="The host IP to run the server on.")
 @click.option("--port", default=8000, type=int, help="The port to run the server on.")
 @click.option(
     "--browser",
@@ -74,7 +74,7 @@ def run(file_path: str, host: str, port: int, browser: bool):
     if browser:
         import webbrowser
 
-        url = f"http://localhost:{port}"
+        url = f"http://{host}:{port}"
         webbrowser.open_new_tab(url)
     uvicorn.run(app, host=host, port=port, log_level="info")
 
@@ -120,7 +120,7 @@ def export(runs: bool = False, prompts: bool = False, filename: str = "promptmag
 
 
 @click.command()
-@click.option("--host", help="The host IP to run the server on.", default="localhost")
+@click.option("--host", help="The host IP to run the server on.", default="127.0.0.1")
 @click.option("--port", help="The port to run the server on.", default=8021)
 def serve(host: str, port: int):
     """Serve the PromptMage collaborative backend and frontend."""
