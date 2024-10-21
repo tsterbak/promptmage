@@ -55,7 +55,12 @@ def run(file_path: str, host: str, port: int, browser: bool):
     logger.info(f"Running PromptMage version {__version__} from {file_path}")
     # create the .promptmage directory to store all the data
     dirPath = Path(".promptmage")
-    dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+    try:
+        dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+    except FileExistsError:
+        pass
+    except Exception as e:
+        logger.error(f"Error creating .promptmage directory: {e}")
 
     # get the available flows from the source file
     available_flows = get_flows(file_path)
