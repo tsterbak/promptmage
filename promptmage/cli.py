@@ -34,7 +34,7 @@ def version():
         exists=True,
     ),
 )
-@click.option("--host", default="localhost", help="The host IP to run the server on.")
+@click.option("--host", default="0.0.0.0", help="The host IP to run the server on.")
 @click.option("--port", default=8000, type=int, help="The port to run the server on.")
 @click.option(
     "--browser",
@@ -55,7 +55,12 @@ def run(file_path: str, host: str, port: int, browser: bool):
     logger.info(f"Running PromptMage version {__version__} from {file_path}")
     # create the .promptmage directory to store all the data
     dirPath = Path(".promptmage")
-    dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+    try:
+        dirPath.mkdir(mode=0o777, parents=False, exist_ok=True)
+    except FileExistsError:
+        pass
+    except Exception as e:
+        logger.error(f"Error creating .promptmage directory: {e}")
 
     # get the available flows from the source file
     available_flows = get_flows(file_path)
@@ -74,7 +79,7 @@ def run(file_path: str, host: str, port: int, browser: bool):
     if browser:
         import webbrowser
 
-        url = f"http://localhost:{port}"
+        url = f"http://{host}:{port}"
         webbrowser.open_new_tab(url)
     uvicorn.run(app, host=host, port=port, log_level="info")
 
@@ -120,7 +125,7 @@ def export(runs: bool = False, prompts: bool = False, filename: str = "promptmag
 
 
 @click.command()
-@click.option("--host", help="The host IP to run the server on.", default="localhost")
+@click.option("--host", help="The host IP to run the server on.", default="0.0.0.0")
 @click.option("--port", help="The port to run the server on.", default=8021)
 def serve(host: str, port: int):
     """Serve the PromptMage collaborative backend and frontend."""
